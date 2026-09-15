@@ -11,13 +11,16 @@ const CACHE = new Map();
 /**
  * Snapshot directory, resolved against THIS MODULE rather than the document.
  *
- * `document.baseURI` for a hash-routed page is `<...>/wta-tour-dashboard/#/rankings`:
- * its pathname is the directory with a trailing slash, so a naive
- * `fetch('../data/x.json')` climbs out of the project subpath and hits the domain
- * root.  Resolving from `import.meta.url` is unambiguous and works identically on
- * GitHub Pages, on a custom domain and on localhost.
+ * A bare `fetch('../data/x.json')` is resolved against `document.baseURI`, whose
+ * pathname for a hash-routed page is the project directory with a trailing slash
+ * (e.g. `/wta-tour-dashboard/`).  Going up one level from a *directory* therefore
+ * leaves the GitHub Pages project subpath entirely and hits the domain root.
+ *
+ * `import.meta.url` always names the module file itself, so exactly one `../`
+ * reaches the sibling `data/` directory — correct on GitHub Pages, on a custom
+ * domain, and on localhost.  This is verified against the deployed site.
  */
-const DATA_BASE = new URL('../../data/', import.meta.url);
+const DATA_BASE = new URL('../data/', import.meta.url);
 
 /** Bumped on every build so GitHub Pages / browsers never serve stale snapshots. */
 export const BUILD_ID = window.__WTA_BUILD__ || String(Date.now());
