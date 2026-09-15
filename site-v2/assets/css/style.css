@@ -899,13 +899,24 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .ev-side.win .ev-nm .cn{font-weight:900;color:var(--gold-400)}
 .ev-side.win .ev-nm .en{color:var(--gold-500);opacity:.9}
 .ev-side:not(.win) .ev-nm{color:var(--ivory-mute)}
-/* 胜者：金色姓名 + 奖杯标记 + 极淡的金色底（金色是荣誉色，不是装饰色） */
-.ev-cup{font-size:11px;line-height:1;flex:0 0 auto;opacity:.95;
-  filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+/* 胜者：只有金色姓名 + 极淡金色底纹；奖杯标记专属冠军，不出现在单场赛果里 */
 .ev-side.win{background:linear-gradient(90deg,rgba(217,172,78,.12),transparent 76%);
   border-radius:5px;padding-left:6px}
 .ev-side.b.win{background:linear-gradient(270deg,rgba(217,172,78,.12),transparent 76%);
   padding-left:0;padding-right:6px}
+
+/* ── 冠军标记（只用在真正的冠军位置） ───────────────────────────── */
+.cup{font-size:11px;line-height:1;flex:0 0 auto;opacity:.95;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.champ-name .cup{margin-right:4px}
+.tl-winner .cup{margin-right:2px}
+
+/* 弹窗顶部：本站冠军一行 */
+.ev-champ{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap;
+  color:var(--gold-400);font-family:var(--font-cn)}
+.ev-champ .bi .cn{color:var(--gold-400);font-weight:700}
+.ev-champ .bi .en{color:var(--gold-500);opacity:.9}
+.ev-champ .cup{font-size:12px}
 .ev-side.b.win{justify-content:flex-start}
 .ev-seed{font-family:var(--font-en);font-size:10px;color:var(--grass-400);
   background:rgba(42,176,114,.14);border:1px solid rgba(42,176,114,.34);

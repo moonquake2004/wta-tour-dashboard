@@ -42,8 +42,11 @@ broadcast results dashboard:
   | US Open | blue `#2478cc` / `#00288c`, gold `#ffd400` |
 
   The dashboard is built on the Wimbledon court green with cream text, and gold is
-  reserved strictly for honours — winners, champions, the top three, and the Grand
-  Slam level tag. The three surface colours are used only to identify a surface.
+  reserved strictly for honours — match winners, champions, the top three, and the
+  Grand Slam level tag. A 🏆 marker appears **only on actual champions** (the
+  champion wall, calendar winners, and the event-results header), never beside a
+  single match winner, whose name is simply set in gold. The three surface colours
+  are used only to identify a surface.
   Typography pairs Noto Serif SC for Chinese display with Oswald / Barlow Condensed
   for Latin and numerals. All sampled text meets WCAG AA (6.6:1 to 14.9:1).
 - **Player detail modal** — click any player anywhere for season records by year,

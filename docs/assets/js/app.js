@@ -278,7 +278,8 @@
       var p = enrich(ch.player);
       return '<div class="champ-card" data-player="' + p.id + '">' +
         '<div class="champ-top">' + av(p.id, p.name, 32, 'champ-avatar') +
-        '<div class="champ-name">' + playerNm(p) + '</div></div>' +
+        '<div class="champ-name"><span class="cup" aria-hidden="true">🏆</span>' +
+        playerNm(p) + '</div></div>' +
         '<div class="champ-ev">' + tourNm(ch.event) + '</div>' +
         '<div class="champ-ev">' + esc(shortDate(ch.date)) + ' · ' + levelTag(ch.level) + '</div></div>';
     }).join('') || emptyState('暂无冠军数据', 'No champions yet');
@@ -411,7 +412,8 @@
         '</div>' +
         '<div class="tl-side">' +
           (champ
-            ? '<span class="tl-winner">' + av(champ.id, champ.name, 24) +
+            ? '<span class="tl-winner"><span class="cup" aria-hidden="true">🏆</span>' +
+              av(champ.id, champ.name, 24) +
               '<a href="javascript:void(0)" data-player="' + champ.id + '">' +
               playerNm(champ) + '</a></span>'
             : '<span class="tl-winner" style="color:var(--ivory-mute)">' +
@@ -1034,14 +1036,12 @@
           var aWin = m.winner === 'a';
           return '<div class="ev-match' + (m.qualifying ? ' q' : '') + '">' +
             '<div class="ev-side' + (aWin ? ' win' : '') + '">' +
-              (aWin ? '<span class="ev-cup" aria-hidden="true">🏆</span>' : '') +
               (m.a.seed ? '<span class="ev-seed">' + m.a.seed + '</span>' : '') +
               '<span class="ev-nm">' + playerNm(m.a) + '</span>' +
               '<span class="flag">' + esc(m.a.country || '') + '</span></div>' +
             '<div class="ev-score">' + esc(m.score || m.note || '—') +
               (m.note ? '<span class="ev-note">' + esc(m.note) + '</span>' : '') + '</div>' +
             '<div class="ev-side b' + (aWin ? '' : ' win') + '">' +
-              (!aWin ? '<span class="ev-cup" aria-hidden="true">🏆</span>' : '') +
               (m.b.seed ? '<span class="ev-seed">' + m.b.seed + '</span>' : '') +
               '<span class="ev-nm">' + playerNm(m.b) + '</span>' +
               '<span class="flag">' + esc(m.b.country || '') + '</span></div>' +
@@ -1049,8 +1049,20 @@
         }).join('') + '</div>';
     }).join('');
 
+    // The event champion is the winner of the main-draw final, if it is recorded.
+    var champion = null;
+    var finalRound = rounds.filter(function (r) { return r.label === 'F' && !r.qualifying; })[0];
+    if (finalRound && finalRound.matches[0]) {
+      var fm = finalRound.matches[0];
+      champion = fm.winner === 'a' ? fm.a : fm.b;
+    }
+
     host.innerHTML =
       '<div class="ev-summary">' +
+        (champion
+          ? '<span class="ev-champ"><span class="cup" aria-hidden="true">🏆</span>' +
+            bi('冠军', 'Champion') + ' ' + playerNm(champion) + '</span>'
+          : '') +
         '<span>' + bi(total + ' 场单打', total + ' singles matches') + '</span>' +
         '<span>' + bi(rounds.length + ' 个轮次', rounds.length + ' rounds') + '</span>' +
         (hasQual ? '<span>' + bi('含资格赛', 'qualifying included') + '</span>' : '') +
