@@ -899,15 +899,16 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .ev-side.win .ev-nm .cn{font-weight:900;color:var(--gold-400)}
 .ev-side.win .ev-nm .en{color:var(--gold-500);opacity:.9}
 .ev-side:not(.win) .ev-nm{color:var(--ivory-mute)}
-/* 胜者前加一枚小奖杯标记，金色是荣誉色而不是装饰色 */
-.ev-side.win::before{content:"🏆";font-size:11px;line-height:1;opacity:.95;flex:0 0 auto}
-.ev-side.b.win::after{content:"🏆";font-size:11px;line-height:1;opacity:.95;flex:0 0 auto}
-.ev-side.b.win::before{content:none}
-.ev-side.win{background:linear-gradient(90deg,rgba(217,172,78,.1),transparent 78%)}
-.ev-side.b.win{background:linear-gradient(270deg,rgba(217,172,78,.1),transparent 78%)}
+/* 胜者：金色姓名 + 奖杯标记 + 极淡的金色底（金色是荣誉色，不是装饰色） */
+.ev-cup{font-size:11px;line-height:1;flex:0 0 auto;opacity:.95;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.ev-side.win{background:linear-gradient(90deg,rgba(217,172,78,.12),transparent 76%);
+  border-radius:5px;padding-left:6px}
+.ev-side.b.win{background:linear-gradient(270deg,rgba(217,172,78,.12),transparent 76%);
+  padding-left:0;padding-right:6px}
 .ev-side.b.win{justify-content:flex-start}
-.ev-seed{font-family:var(--font-en);font-size:10px;color:var(--ball-400);
-  background:rgba(217,172,78,.12);border:1px solid rgba(217,172,78,.3);
+.ev-seed{font-family:var(--font-en);font-size:10px;color:var(--grass-400);
+  background:rgba(42,176,114,.14);border:1px solid rgba(42,176,114,.34);
   border-radius:4px;padding:0 4px;flex:0 0 auto}
 .ev-side .flag{flex:0 0 auto}
 .ev-score{font-family:var(--font-en);font-size:12.5px;font-weight:600;

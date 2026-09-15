@@ -1034,12 +1034,14 @@
           var aWin = m.winner === 'a';
           return '<div class="ev-match' + (m.qualifying ? ' q' : '') + '">' +
             '<div class="ev-side' + (aWin ? ' win' : '') + '">' +
+              (aWin ? '<span class="ev-cup" aria-hidden="true">🏆</span>' : '') +
               (m.a.seed ? '<span class="ev-seed">' + m.a.seed + '</span>' : '') +
               '<span class="ev-nm">' + playerNm(m.a) + '</span>' +
               '<span class="flag">' + esc(m.a.country || '') + '</span></div>' +
             '<div class="ev-score">' + esc(m.score || m.note || '—') +
               (m.note ? '<span class="ev-note">' + esc(m.note) + '</span>' : '') + '</div>' +
             '<div class="ev-side b' + (aWin ? '' : ' win') + '">' +
+              (!aWin ? '<span class="ev-cup" aria-hidden="true">🏆</span>' : '') +
               (m.b.seed ? '<span class="ev-seed">' + m.b.seed + '</span>' : '') +
               '<span class="ev-nm">' + playerNm(m.b) + '</span>' +
               '<span class="flag">' + esc(m.b.country || '') + '</span></div>' +
