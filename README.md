@@ -41,7 +41,8 @@ broadcast results dashboard:
   | Roland Garros | terracotta `#cc4e0e` / `#e38045`, deep green `#00503c` / `#033629` |
   | US Open | blue `#2478cc` / `#00288c`, gold `#ffd400` |
 
-  The dashboard is built on the Wimbledon court green with cream text, and gold is
+  The dashboard is built on a brightened Wimbledon court green (large-area ground at
+  L*≈29, page mean L*≈37, tuned for comfortable reading) with cream text, and gold is
   reserved strictly for honours — match winners, champions, the top three, and the
   Grand Slam level tag. A 🏆 marker appears **only on actual champions** (the
   champion wall, calendar winners, and the event-results header), never beside a
