@@ -214,6 +214,7 @@ export async function render(host, { id }) {
               ${row('Plays', esc([b.hand, b.backhand && b.backhand !== 'N/A' ? `${b.backhand} backhand` : ''].filter(Boolean).join(' · ') || '—'))}
               ${row('Height', esc(heightLabel(b.height) || '—'))}
               ${row('Career high', b.sglHighRank ? `No.${b.sglHighRank}${b.sglHighDate ? ` · ${dateLabel(b.sglHighDate)}` : ''}` : '—')}
+              ${row('Ranking points', `${int(p.points)} <span class="dim" style="font-size:11.5px">as of ${dateLabel(rank.asOf)}</span>`)}
               ${row('Doubles rank', b.dblRank ? `No.${b.dblRank}` : '—')}
               ${row('Career prize money', b.careerPrize ? money(b.careerPrize) : '—')}
               ${row(`${seasonYear} prize money`, b.ytdPrize ? money(b.ytdPrize) : '—')}
