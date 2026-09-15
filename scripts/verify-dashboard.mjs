@@ -227,6 +227,24 @@ check(
   'every summary pairing is accounted for',
   Object.keys(HM).length > 0 && Object.keys(HM).length <= pairs.length,
 );
+// The head-to-head pickers must offer the whole ranking, not only players who
+// happen to have a stored meeting.
+const top100 = D.players.slice(0, 100);
+check(
+  'head-to-head roster covers the top 100',
+  top100.every((p) => H.players[p.id]),
+  top100.filter((p) => !H.players[p.id]).map((p) => p.name).join(', ') || 'complete',
+);
+check(
+  'head-to-head roster carries rankings for the top 100',
+  top100.every((p) => H.players[p.id]?.rank),
+  top100.filter((p) => !H.players[p.id]?.rank).length + ' without a rank',
+);
+check(
+  'head-to-head roster covers the whole ranking table',
+  D.players.every((p) => H.players[p.id]),
+  D.players.filter((p) => !H.players[p.id]).length + ' missing',
+);
 check(
   'every pair member resolves to a named player',
   pairs.every((k) => {

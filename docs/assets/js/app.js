@@ -724,43 +724,105 @@
     var top = D.players.slice(0, 2);
     if (!h2hSel.a && top[0]) h2hSel.a = top[0].id;
     if (!h2hSel.b && top[1]) h2hSel.b = top[1].id;
-    bindH2HPicker('A', $('#h2hA'), $('#h2hSuggestA'), roster, function (id) { h2hSel.a = id; paintH2HAsync(); });
-    bindH2HPicker('B', $('#h2hB'), $('#h2hSuggestB'), roster, function (id) { h2hSel.b = id; paintH2HAsync(); });
+    bindH2HPicker(
+      'A', $('#h2hA'), $('#h2hSuggestA'), roster,
+      function (id) { h2hSel.a = id; paintH2HAsync(); },
+      syncH2HInputs,
+      function () { return h2hSel.b; },
+    );
+    bindH2HPicker(
+      'B', $('#h2hB'), $('#h2hSuggestB'), roster,
+      function (id) { h2hSel.b = id; paintH2HAsync(); },
+      syncH2HInputs,
+      function () { return h2hSel.a; },
+    );
     syncH2HInputs();
     // Render the record only; the meeting payload loads when the panel is opened
     // (see syncH2HMeetings), so the initial page load stays light.
     paintH2H();
   }
 
+  /** How many players the head-to-head pickers suggest at once. */
+  var H2H_SUGGEST = 30;
+
   var rosterIndex = null;
   function norm(s) {
     return String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   }
 
-  function bindH2HPicker(side, input, box, roster, onPick) {
+  function bindH2HPicker(side, input, box, roster, onPick, onRestore, excluder) {
     if (!rosterIndex) {
       rosterIndex = roster.map(function (p) {
         return { id: p.id, name: p.name, zh: p.zh, country: p.country, rank: p.rank, key: norm(p.name), zkey: norm(p.zh) };
       });
     }
-    input.addEventListener('input', function () {
-      var q = norm(input.value).trim();
-      if (q.length < 1) { box.hidden = true; return; }
-      var hits = rosterIndex.filter(function (p) {
-        return p.key.indexOf(q) >= 0 || (p.zkey && p.zkey.indexOf(q) >= 0);
-      }).sort(function (x, y) {
-        var xs = x.key.indexOf(q) === 0 ? 0 : 1, ys = y.key.indexOf(q) === 0 ? 0 : 1;
-        if (xs !== ys) return xs - ys;
-        return (x.rank || 9999) - (y.rank || 9999);
-      }).slice(0, 20);
-      box.innerHTML = hits.length ? hits.map(function (p) {
-        return '<button type="button" data-pick="' + p.id + '">' + av(p.id, p.name, 26) +
-          '<span class="sn"><b class="cn">' + esc(p.zh || p.name) + '</b>' +
-          '<span class="en">' + esc(p.name) + '</span></span>' +
-          '<span class="sr">' + (p.rank ? '#' + p.rank : '') + ' ' + esc(p.country || '') + '</span></button>';
-      }).join('') : '<div style="padding:12px;text-align:center;color:var(--ivory-mute);font-size:12.5px">' +
-        bi('未找到球员', 'No player found') + '</div>';
+    /**
+     * Suggestions. With an empty query the ranked players are listed in ranking
+     * order, so the top 100 are browsable without typing; a query filters across
+     * both the English and Chinese names, ranked players first.
+     */
+    function suggest(query) {
+      var q = norm(query).trim();
+      // The player already chosen in the other field is not offered again.
+      var skipId = excluder ? excluder() : null;
+      var pool = skipId ? rosterIndex.filter(function (p) { return p.id !== skipId; }) : rosterIndex;
+      var hits;
+      if (!q) {
+        hits = pool
+          .filter(function (p) { return p.rank; })
+          .sort(function (x, y) { return x.rank - y.rank; })
+          .slice(0, H2H_SUGGEST);
+      } else {
+        hits = pool.filter(function (p) {
+          return p.key.indexOf(q) >= 0 || (p.zkey && p.zkey.indexOf(q) >= 0);
+        }).sort(function (x, y) {
+          // Ranked players first, then prefix matches, then by ranking.
+          var xr = x.rank ? 0 : 1, yr = y.rank ? 0 : 1;
+          if (xr !== yr) return xr - yr;
+          var xs = x.key.indexOf(q) === 0 ? 0 : 1, ys = y.key.indexOf(q) === 0 ? 0 : 1;
+          if (xs !== ys) return xs - ys;
+          return (x.rank || 9999) - (y.rank || 9999);
+        }).slice(0, H2H_SUGGEST);
+      }
+      if (!hits.length) {
+        box.innerHTML = '<div style="padding:12px;text-align:center;color:var(--ivory-mute);font-size:12.5px">' +
+          bi('未找到球员', 'No player found') + '</div>';
+      } else {
+        box.innerHTML =
+          (!q ? '<div class="h2h-hint">' + bi('按排名显示（前 100 名均可选择）', 'Ranked players — the top 100 are all selectable') + '</div>' : '') +
+          hits.map(function (p) {
+            return '<button type="button" data-pick="' + p.id + '">' + av(p.id, p.name, 26) +
+              '<span class="sn"><b class="cn">' + esc(p.zh || p.name) + '</b>' +
+              '<span class="en">' + esc(p.name) + '</span></span>' +
+              '<span class="sr">' + (p.rank ? '#' + p.rank : '') + ' ' + esc(p.country || '') + '</span></button>';
+          }).join('');
+      }
       box.hidden = false;
+    }
+
+    // A field holding exactly the current selection is "displaying a choice";
+    // anything else is a live search. Focusing the former browses the ranking,
+    // focusing the latter keeps filtering what was typed.
+    function holdsSelection() {
+      var current = input.getAttribute('data-selected') || '';
+      return !!current && norm(input.value) === norm(current);
+    }
+    input.addEventListener('input', function () {
+      input.removeAttribute('data-selected');
+      suggest(input.value);
+    });
+    input.addEventListener('focus', function () {
+      if (holdsSelection()) {
+        input.value = '';
+        input.removeAttribute('data-selected');
+      }
+      suggest(input.value);
+    });
+    input.addEventListener('blur', function () {
+      // Leaving the field blank restores the current selection.
+      setTimeout(function () {
+        if (!input.value.trim()) onRestore();
+      }, 180);
     });
     box.addEventListener('mousedown', function (e) {
       var btn = e.target.closest('[data-pick]');
@@ -769,6 +831,10 @@
       input.value = '';
       box.hidden = true;
       onPick(Number(btn.dataset.pick));
+      // onPick re-syncs the field; mark that value as the current selection.
+      setTimeout(function () {
+        if (input.value.trim()) input.setAttribute('data-selected', input.value);
+      }, 0);
     });
     document.addEventListener('click', function (e) {
       if (!box.parentNode.contains(e.target)) box.hidden = true;
@@ -776,12 +842,22 @@
   }
 
   function syncH2HInputs() {
-    if (h2hSel.a) $('#h2hA').value = (H.players[h2hSel.a] || {}).name || '';
-    if (h2hSel.b) $('#h2hB').value = (H.players[h2hSel.b] || {}).name || '';
+    if (h2hSel.a) {
+      var a = (H.players[h2hSel.a] || {}).name || '';
+      $('#h2hA').value = a;
+      if (a) $('#h2hA').setAttribute('data-selected', a);
+    }
+    if (h2hSel.b) {
+      var b = (H.players[h2hSel.b] || {}).name || '';
+      $('#h2hB').value = b;
+      if (b) $('#h2hB').setAttribute('data-selected', b);
+    }
   }
 
   function paintH2H() {
     var out = $('#h2hResult');
+    // Keep the pickers showing the current selection after every repaint.
+    syncH2HInputs();
     if (!h2hSel.a || !h2hSel.b) { out.innerHTML = ''; return; }
     if (h2hSel.a === h2hSel.b) {
       out.innerHTML = emptyState('请选择两位不同的球员', 'Pick two different players');
@@ -846,8 +922,8 @@
         }).join('') + '</div>';
     } else {
       list = '<div class="h2h-empty">' + bi(
-        '已存比赛窗口（2023 年至今）中没有这两位球员的交手记录。',
-        'No meetings between these two appear in the stored window (2023 onwards).'
+        '这两位球员在已存比赛窗口（2023 年至今）中没有交手记录，双方仍可对比下方数据。',
+        'These two have no meeting inside the stored window (2023 onwards); the comparison below still applies.'
       ) + '</div>';
     }
 

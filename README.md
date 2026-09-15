@@ -25,7 +25,7 @@ broadcast results dashboard:
 | Rankings | 排名 | The official singles ranking with podium, movement and ranking trajectories |
 | Players | 球员 | Player cards with season W–L, form, titles and serve splits |
 | Statistics | 数据 | Twelve season leaderboards, career leaders, level and surface splits |
-| Head-to-head | 交手 | Any two players: career record, every meeting, side-by-side comparison |
+| Head-to-head | 交手 | Any two players: career record, every meeting, side-by-side comparison. The pickers cover **every ranked player** (all of the top 100), browse by ranking when empty, search either language, and never offer the player already chosen on the other side |
 
 - **Bilingual by default.** Every player, event, country, round and surface is
   shown in Chinese and English at once; a three-way switch (`中/EN · 中文 · EN`)

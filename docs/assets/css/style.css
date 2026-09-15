@@ -939,3 +939,10 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
   .ev-seed{font-size:9px;padding:0 3px}
   .ev-score{font-size:11.5px}
 }
+
+/* 交手选择器：空查询时按排名列出可选球员 */
+.h2h-hint{padding:7px 10px 9px;margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,.08);
+  font-size:10.5px;letter-spacing:.05em;color:var(--grass-400);font-family:var(--font-ui)}
+.h2h-hint .cn{font-family:var(--font-cn);letter-spacing:.02em}
+.h2h-suggest{max-height:340px}
+.h2h-suggest .sr{min-width:52px;text-align:right}

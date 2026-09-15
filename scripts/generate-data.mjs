@@ -254,6 +254,14 @@ const roster = (id) => {
   return h2hRoster[id];
 };
 
+// Seed the roster from the whole ranking table first: the head-to-head picker
+// must offer every ranked player, including the top 100, even when that player
+// has no stored meeting yet. The lazy `roster()` below then adds anyone else who
+// only appears in older results.
+for (const p of rank.players) {
+  roster(p.id);
+}
+
 const MAX_PAIR_MEETINGS = 24;
 const h2hPairs = {};
 const h2hMeetings = {};
