@@ -96,7 +96,9 @@
   function bi(cn, en, cls) {
     var c = String(cn == null ? '' : cn).trim();
     var e = String(en == null ? '' : en).trim();
-    if (!c) return '<span class="' + (cls || '') + '">' + esc(e) + '</span>';
+    // Identical strings (a player or event with no Chinese name, or a country
+    // whose code is the only label) must render once, not twice.
+    if (!c || c === e) return '<span class="' + (cls || '') + '">' + esc(e || c) + '</span>';
     if (!e) return '<span class="' + (cls || '') + '">' + esc(c) + '</span>';
     return '<span class="' + (cls || '') + '"><span class="cn">' + esc(c) + '</span>' +
       '<span class="en">' + esc(e) + '</span></span>';
@@ -109,6 +111,12 @@
   function roundZh(r) { return (ZH.rounds || {})[String(r || '').toUpperCase()] || ''; }
   function surfaceZh(s) { return (ZH.surfaces || {})[String(s || '').toUpperCase()] || ''; }
   function tourZh(name) { return (D.tournamentZh || {})[name] || ''; }
+
+  /** 赛事名双语对；无中文译名时只显示原名。 */
+  function tourNm(name, cls) {
+    var zh = tourZh(name);
+    return bi(zh, name, cls);
+  }
 
   /** 数据榜中文名（英文名由数据管线提供） */
   var BOARD_ZH = {
@@ -196,19 +204,27 @@
   /* ------------------------------------------------- 数据索引 */
   var byId = {};
   D.players.forEach(function (p) { byId[p.id] = p; });
-  function miniPlayer(id) {
-    if (byId[id]) return byId[id];
-    if (H.players && H.players[id]) {
-      var h = H.players[id];
-      return { id: id, name: h.name, zh: h.zh, country: h.country, rank: h.rank };
-    }
-    return { id: id, name: '#' + id, zh: '', country: '', rank: null };
+  function miniPlayer(id) { return mergePlayer({ id: id }); }
+  /**
+   * Merge a lightweight player reference with the roster entry of the same id.
+   *
+   * Champion records, leaderboard rows and H2H references each carry a different
+   * subset of fields, so every name is resolved through here before display —
+   * otherwise the Chinese name is dropped and the row renders in Latin only.
+   */
+  function mergePlayer(ref) {
+    if (!ref) return null;
+    var known = byId[ref.id] || (H.players && H.players[ref.id]) || {};
+    return {
+      id: ref.id,
+      name: ref.name || known.name || '',
+      zh: ref.zh || known.zh || '',
+      country: ref.country || known.country || '',
+      rank: ref.rank != null ? ref.rank : known.rank != null ? known.rank : null
+    };
   }
   /** Enrich a lightweight result reference into a displayable player. */
-  function enrich(ref) {
-    var p = miniPlayer(ref.id);
-    return { id: ref.id, name: ref.name || p.name, zh: ref.zh || p.zh, country: ref.country || p.country, rank: ref.rank != null ? ref.rank : p.rank };
-  }
+  function enrich(ref) { return mergePlayer(ref); }
 
   /* ==========================================================================
      总览
@@ -224,11 +240,11 @@
     var no1 = D.players[0];
     var kpis = [
       { cn: '排名球员', en: 'Ranked players', v: int(c.rankedPlayers), sub: bi('单打世界排名收录', 'singles ranking depth'), accent: 'var(--ball-500)' },
-      { cn: '赛季赛事', en: 'Season events', v: int(c.events), sub: bi(c.completedEvents + ' 项已结束', c.completedEvents + ' completed'), accent: 'var(--clay-500)' },
-      { cn: '赛季比赛', en: 'Season matches', v: int(c.seasonMatches), sub: bi('已收录赛果', 'results captured'), accent: 'var(--grass-400)' },
-      { cn: '产生冠军', en: 'Titles won', v: int(c.champions), sub: bi('本赛季单打冠军', 'singles champions'), accent: 'var(--hard-500)' },
-      { cn: '世界第一', en: 'World No.1', v: no1 ? playerZhOf(no1) || no1.name : '—', sub: no1 ? bi(int(no1.points) + ' 积分', int(no1.points) + ' pts') : '', accent: 'var(--ball-500)', small: true },
-      { cn: '下周开赛', en: 'Upcoming', v: int(c.upcomingEvents), sub: bi('未开始的赛事', 'events not yet played'), accent: 'var(--clay-400)' }
+      { cn: '赛季赛事', en: 'Season events', v: int(c.events), sub: bi(c.completedEvents + ' 项已结束', c.completedEvents + ' completed'), accent: 'var(--grass-400)' },
+      { cn: '赛季比赛', en: 'Season matches', v: int(c.seasonMatches), sub: bi('已收录赛果', 'results captured'), accent: 'var(--line-white)' },
+      { cn: '产生冠军', en: 'Titles won', v: int(c.champions), sub: bi('本赛季单打冠军', 'singles champions'), accent: 'var(--ball-500)' },
+      { cn: '世界第一', en: 'World No.1', v: no1 ? playerZhOf(no1) || no1.name : '—', sub: no1 ? bi(int(no1.points) + ' 积分', int(no1.points) + ' pts') : '', accent: 'var(--ball-400)', small: true },
+      { cn: '下周开赛', en: 'Upcoming', v: int(c.upcomingEvents), sub: bi('未开始的赛事', 'events not yet played'), accent: 'var(--grass-500)' }
     ];
     $('#kpiGrid').innerHTML = kpis.map(function (k) {
       return '<div class="kpi" style="--kpi-accent:' + k.accent + '">' +
@@ -244,8 +260,8 @@
       var p = enrich(ch.player);
       return '<div class="champ-card" data-player="' + p.id + '">' +
         '<div class="champ-top">' + av(p.id, p.name, 32, 'champ-avatar') +
-        '<div class="champ-name">' + bi(playerZhOf(p) || p.name, p.name) + '</div></div>' +
-        '<div class="champ-ev">' + bi(tourZh(ch.event) || ch.event, ch.event) + '</div>' +
+        '<div class="champ-name">' + playerNm(p) + '</div></div>' +
+        '<div class="champ-ev">' + tourNm(ch.event) + '</div>' +
         '<div class="champ-ev">' + esc(shortDate(ch.date)) + ' · ' + levelTag(ch.level) + '</div></div>';
     }).join('') || emptyState('暂无冠军数据', 'No champions yet');
 
@@ -260,7 +276,7 @@
           '<div class="rr-players"><span class="rr-w">' + playerNm(w) + '</span>' +
           '<span class="d">d.</span><span class="rr-l">' + playerNm(l) + '</span></div>' +
           '<div class="rr-ev">' + roundTag(r.round) + '<span>·</span>' +
-          bi(tourZh(r.event) || r.event, r.event) + surfaceTag(r.surface) + '</div>' +
+          tourNm(r.event) + surfaceTag(r.surface) + '</div>' +
         '</div>' +
         '<div class="rr-score">' + esc(r.score) + '</div></div>';
     }).join('') || emptyState('暂无赛果', 'No results yet');
@@ -278,7 +294,7 @@
           var p = miniPlayer(r.id);
           return '<div class="mini-row"><span class="n">' +
             '<a href="javascript:void(0)" data-player="' + r.id + '">' +
-            esc(playerZhOf(p) || r.name) + '</a></span>' +
+            playerNm(p) + '</a></span>' +
             '<span class="v">' + (b.unit === '%' ? pct(r.value) : int(r.value)) + '</span>' +
             '<span class="mini-bar" style="grid-column:1/-1"><i style="width:' +
             Math.max(2, (r.value / max) * 100).toFixed(1) + '%"></i></span></div>';
@@ -299,7 +315,7 @@
       rows.map(function (p, i) {
         return '<div class="career-row"><span class="i">' + (i + 1) + '</span>' +
           '<span class="n"><a href="javascript:void(0)" data-player="' + p.id + '">' +
-          esc(p.zh || p.name) + '</a></span>' +
+          playerNm(p) + '</a></span>' +
           '<span class="v">' + fmt(p) + '</span></div>';
       }).join('') + '</div>';
   }
@@ -310,7 +326,7 @@
         '<span class="n"><span class="i" style="font-family:var(--font-en);color:var(--ivory-mute);width:20px;display:inline-block">' +
         (i + 1) + '</span>' +
         '<a href="javascript:void(0)" data-player="' + p.id + '" style="margin-left:8px">' +
-        esc(playerZhOf(p) || p.name) + '</a>' +
+        playerNm(p) + '</a>' +
         '<span class="en" style="margin-left:6px">' + esc(p.country || '') + '</span></span>' +
         '<span class="v">' + int(p[metric]) + '</span></div>';
     }).join('') + '</div>';
@@ -363,7 +379,7 @@
         '<div class="tl-date"><span class="tl-range">' + esc(shortDate(e.start)) + ' – ' + esc(shortDate(e.end) || '…') + '</span>' +
         '<span class="tl-count">' + esc(e.city || '') + '</span></div>' +
         '<div class="tl-main">' +
-          '<div class="tl-name">' + bi(tourZh(e.name) || e.name, e.name) + levelTag(e.level) + '</div>' +
+          '<div class="tl-name">' + tourNm(e.name) + levelTag(e.level) + '</div>' +
           '<div class="tl-meta">' + surfaceTag(e.surface) +
             (e.draw ? '<span>' + bi(e.draw + ' 签位', e.draw + ' draw') + '</span>' : '') +
             (e.prize ? '<span>' + esc(moneyShort(e.prize)) + '</span>' : '') +
@@ -374,9 +390,9 @@
           (champ
             ? '<span class="tl-winner">' + av(champ.id, champ.name, 24) +
               '<a href="javascript:void(0)" data-player="' + champ.id + '">' +
-              esc(playerZhOf(champ) || champ.name) + '</a></span>'
+              playerNm(champ) + '</a></span>'
             : '<span class="tl-winner" style="color:var(--ivory-mute)">' +
-              bi(e.status === 'past' ? '—' : '待定', e.status === 'past' ? '—' : 'TBD') + '</span>') +
+              (e.status === 'past' ? '' : bi('待定', 'TBD')) + '</span>') +
           (prog != null ? '<span class="tl-progress"><i style="width:' + prog + '%"></i></span>' : '') +
         '</div></div>';
     }).join('') || emptyState('没有符合条件的赛事', 'No events match these filters');
@@ -464,7 +480,7 @@
             (l.rank ? '<span class="rank">#' + l.rank + '</span>' : '') +
           '</div>' +
           '<div class="result-ev">' + roundTag(r.round) + '<span>·</span>' +
-            bi(tourZh(r.event) || r.event, r.event) + surfaceTag(r.surface) + levelTag(r.level) +
+            tourNm(r.event) + surfaceTag(r.surface) + levelTag(r.level) +
           '</div>' +
         '</div>' +
         '<div class="result-score">' + esc(r.score) + '</div></div>';
@@ -483,7 +499,7 @@
       return '<div class="podium-card g' + (i + 1) + '" data-player="' + p.id + '">' +
         '<span class="podium-n">No.' + p.rank + '</span>' +
         av(p.id, p.name, 76) +
-        '<div class="podium-name">' + bi(playerZhOf(p) || p.name, p.name) + '</div>' +
+        '<div class="podium-name">' + playerNm(p) + '</div>' +
         '<div class="podium-pts">' + int(p.points) + '</div>' +
         '<div class="podium-country">' + esc(countryZh(p.country) || p.country) + '</div></div>';
     }).join('');
@@ -507,7 +523,7 @@
       return '<tr class="clickable" data-player="' + p.id + '">' +
         '<td>' + p.rank + '</td>' +
         '<td class="l"><div class="tb-player">' + av(p.id, p.name, 34) +
-          '<span class="tb-nm">' + bi(playerZhOf(p) || p.name, p.name) + '</span></div></td>' +
+          '<span class="tb-nm">' + playerNm(p) + '</span></div></td>' +
         '<td class="c">' + countryCell(p.country) + '</td>' +
         '<td>' + moveTag(p.move) + '</td>' +
         '<td class="tb-num">' + (p.age != null ? p.age : (age(p.birth) || '—')) + '</td>' +
@@ -558,7 +574,7 @@
     $('#playerGrid').innerHTML = shown.map(function (p) {
       var s = p.season || {};
       var serve = p.serve || {};
-      var accent = s.w != null && s.l != null && s.w > s.l ? 'var(--grass-500)' : 'var(--clay-500)';
+      var accent = s.w != null && s.l != null && s.w > s.l ? 'var(--grass-400)' : 'var(--line-white)';
       return '<div class="player-card" data-player="' + p.id + '" style="--pc-accent:' + accent + '">' +
         '<div class="pc-top">' + av(p.id, p.name, 54) +
           '<div class="pc-id">' +
@@ -609,7 +625,7 @@
           var p = miniPlayer(r.id);
           return '<div class="lb-row">' +
             '<span class="i">' + (i + 1) + '</span>' + av(r.id, p.name, 28) +
-            '<span class="n"><b>' + esc(playerZhOf(p) || r.name) + '</b>' +
+            '<span class="n"><b class="cn">' + esc(playerZhOf(p) || r.name) + '</b>' +
               '<span class="en">' + esc(r.name) + '</span></span>' +
             '<span class="v">' + (b.unit === '%' ? pct(r.value) : int(r.value)) + '</span>' +
             '<span class="lb-bar"><i style="width:' + Math.max(2, (r.value / max) * 100).toFixed(1) + '%"></i></span>' +
@@ -634,7 +650,7 @@
       return '<tr class="clickable" data-player="' + p.id + '">' +
         '<td>' + (i + 1) + '</td>' +
         '<td class="l"><div class="tb-player">' + av(p.id, p.name, 32) +
-          '<span class="tb-nm">' + bi(p.zh || '', p.name) + '</span></div></td>' +
+          '<span class="tb-nm">' + playerNm(p) + '</span></div></td>' +
         '<td class="c">' + countryCell(p.country) + '</td>' +
         '<td class="tb-num">' + m.fmt(p[m.key]) + '</td></tr>';
     }).join('');
@@ -711,7 +727,7 @@
       }).slice(0, 20);
       box.innerHTML = hits.length ? hits.map(function (p) {
         return '<button type="button" data-pick="' + p.id + '">' + av(p.id, p.name, 26) +
-          '<span class="sn"><b>' + esc(p.zh || p.name) + '</b>' +
+          '<span class="sn"><b class="cn">' + esc(p.zh || p.name) + '</b>' +
           '<span class="en">' + esc(p.name) + '</span></span>' +
           '<span class="sr">' + (p.rank ? '#' + p.rank : '') + ' ' + esc(p.country || '') + '</span></button>';
       }).join('') : '<div style="padding:12px;text-align:center;color:var(--ivory-mute);font-size:12.5px">' +
@@ -775,8 +791,8 @@
       '<div class="h2h-bar"><i class="a" style="width:' + share.toFixed(1) + '%"></i>' +
       '<i class="b" style="width:' + (100 - share).toFixed(1) + '%"></i></div>' +
       '<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--ivory-mute);font-family:var(--font-cn)">' +
-      '<span>' + esc(playerZhOf(A) || A.name) + ' ' + aw + ' ' + bi('胜', 'wins') + '</span>' +
-      '<span>' + esc(playerZhOf(B) || B.name) + ' ' + bw + ' ' + bi('胜', 'wins') + '</span></div>';
+      '<span>' + playerNm(A) + ' ' + aw + ' ' + bi('胜', 'wins') + '</span>' +
+      '<span>' + playerNm(B) + ' ' + bw + ' ' + bi('胜', 'wins') + '</span></div>';
 
     var list;
     if (meetings.length) {
@@ -792,12 +808,12 @@
           var loser = winnerId === A.id ? B : A;
           return '<div class="h2h-row">' +
             '<div class="h2h-date">' + esc(shortDate(m.d, true)) + '</div>' +
-            '<div class="h2h-tour"><span class="cn">' + esc(playerZhOf(winner) || winner.name) + ' def. ' +
-              esc(playerZhOf(loser) || loser.name) + '</span>' +
-              '<span class="en">' + esc(winner.name) + '</span>' +
-              '<span style="font-size:10.5px;color:var(--ivory-mute)">' +
-              esc(tourZh(m.t) || m.t) + ' · ' + esc(roundZh(m.r) || m.r) + ' · ' +
-              esc(surfaceZh(m.sfc) || surfaceLabel(m.sfc)) + '</span></div>' +
+            '<div class="h2h-tour">' +
+              '<span class="cn">' + esc(playerZhOf(winner) || winner.name) +
+              ' 胜 ' + esc(playerZhOf(loser) || loser.name) + '</span>' +
+              '<span class="en">' + esc(winner.name) + ' def. ' + esc(loser.name) + '</span>' +
+              '<span class="meta-line">' + tourNm(m.t) + ' · ' + roundTag(m.r) + ' · ' +
+              surfaceTag(m.sfc) + '</span></div>' +
             '<div class="h2h-sc">' + esc(m.sc) + '</div></div>';
         }).join('') + '</div>';
     } else {

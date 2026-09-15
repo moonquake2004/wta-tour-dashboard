@@ -29,7 +29,13 @@ broadcast results dashboard:
 
 - **Bilingual by default.** Every player, event, country, round and surface is
   shown in Chinese and English at once; a three-way switch (`中/EN · 中文 · EN`)
-  collapses to one language and the choice persists locally.
+  collapses to one language and the choice persists locally. The switch is pure
+  CSS (`html[data-lang]`), so changing language re-renders nothing.
+- **Clay-court design language.** Terracotta court ground with grass-green header,
+  the three Grand Slam surface colours used as data accents, tennis-ball yellow
+  for numerals and white court lines. Typography pairs Noto Serif SC for Chinese
+  display with Oswald / Barlow Condensed for Latin and numerals (the same stack a
+  companion snooker dashboard uses). All sampled text meets WCAG AA contrast.
 - **Player detail modal** — click any player anywhere for season records by year,
   serve splits, career highs and prize money.
 - **No runtime requests for content.** The payload is loaded as a plain script

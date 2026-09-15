@@ -737,6 +737,7 @@ export const PLAYER_ZH = {
   // Romanian / Greek
   'Elena Ruxandra Bertea': '埃列娜·鲁克桑德拉·贝尔泰亚',
   'Martha Matoula': '玛莎·马图拉',
+  'Maria Sakkari': '玛丽亚·萨卡里',
   // French / German / Nordic / Swiss
   'Alice Rame': '爱丽丝·拉姆',
   'Eva Bennemann': '埃娃·本内曼',

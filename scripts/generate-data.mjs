@@ -23,7 +23,7 @@ const readJson = async (f, fallback) => {
 
 log('gen', 'Building the dashboard data file…');
 
-const [rank, bios, stats, history, matches, tour, boards, h2h, names, index, zh] =
+const [rank, bios, stats, history, matches, tour, boardsIn, h2h, names, index, zh] =
   await Promise.all([
     readJson('rankings-singles.json', { players: [], asOf: null }),
     readJson('bios.json', {}),
@@ -38,8 +38,18 @@ const [rank, bios, stats, history, matches, tour, boards, h2h, names, index, zh]
     readJson('zh.json', { players: {}, tournaments: {}, countries: {}, levels: {}, rounds: {}, surfaces: {} }),
   ]);
 
-const SEASON = boards.season || new Date().getUTCFullYear();
+const SEASON = boardsIn.season || new Date().getUTCFullYear();
 const rankById = new Map(rank.players.map((p) => [p.id, p]));
+
+/**
+ * Wikidata occasionally carries a "Chinese" label that is just the Latin name.
+ * Such a value is worse than nothing: the UI would print it twice.  Anything
+ * without a CJK character is treated as missing.
+ */
+const zhName = (id) => {
+  const raw = (zh.players?.[id] || '').trim();
+  return /[\u4e00-\u9fff]/.test(raw) ? raw : '';
+};
 
 /* ------------------------------------------------------------------ */
 /* Season records (W–L, titles, surface splits)                        */
@@ -100,6 +110,7 @@ for (const e of tour.events) {
     player: {
       id: e.champion.id,
       name: e.champion.name,
+      zh: zhName(e.champion.id),
       country: e.champion.country,
     },
   });
@@ -145,16 +156,23 @@ for (const [ownerId, list] of Object.entries(matches)) {
 }
 results.sort((a, b) => (a.date < b.date ? 1 : -1));
 
-/** Attach display names from the ranking table, the biography map, or the H2H
- *  name index — every participant in the data must resolve to something. */
+/**
+ * Attach display names from the ranking table, the biography map, or the H2H
+ * name index — every participant in the data must resolve to something.
+ *
+ * `zh` is resolved here too so that every player reference in the payload
+ * carries its Chinese name. Renderers that receive a bare `{id, name}` from a
+ * leaderboard or champion record would otherwise fall back to Latin text.
+ */
 function displayName(id) {
+  const cz = zhName(id);
   const r = rankById.get(id);
-  if (r) return { name: r.name, country: r.country, rank: r.rank };
+  if (r) return { name: r.name, zh: cz, country: r.country, rank: r.rank };
   const b = bios[id];
-  if (b) return { name: b.name, country: b.country, rank: null };
+  if (b) return { name: b.name, zh: cz, country: b.country, rank: null };
   const n = names[id];
-  if (n) return { name: n.n, country: n.c, rank: n.r ?? null };
-  return { name: `#${id}`, country: '', rank: null };
+  if (n) return { name: n.n, zh: cz, country: n.c, rank: n.r ?? null };
+  return { name: `#${id}`, zh: cz, country: '', rank: null };
 }
 
 /* ------------------------------------------------------------------ */
@@ -279,7 +297,9 @@ const calendar = tour.events
     prize: e.prize,
     currency: e.currency,
     status: e.status,
-    champion: e.champion || null,
+    champion: e.champion
+      ? { ...e.champion, zh: zhName(e.champion.id) }
+      : null,
   }))
   .sort((a, b) => (a.start < b.start ? 1 : -1));
 
@@ -326,6 +346,18 @@ const meta = {
 const RESULT_LIMIT = Number(process.env.WTA_RESULT_LIMIT || 1200);
 const recentResults = results.slice(0, RESULT_LIMIT);
 
+/** Add the Chinese name to every row of a leaderboard or career table. */
+function withZh(rows) {
+  return (rows || []).map((r) => ({ ...r, zh: zhName(r.id) }));
+}
+
+const boards = (boardsIn.boards || []).map((b) => ({ ...b, rows: withZh(b.rows) }));
+const career = {
+  titles: withZh(boardsIn.career?.titles),
+  careerWins: withZh(boardsIn.career?.careerWins),
+  prizeMoney: withZh(boardsIn.career?.prizeMoney),
+};
+
 const payload = {
   meta,
   players,
@@ -336,8 +368,8 @@ const payload = {
   })),
   champions,
   calendar,
-  boards: boards.boards,
-  career: boards.career,
+  boards,
+  career,
   seasonRecords,
   tournamentZh: zh.tournaments || {},
   playerIndex: index,

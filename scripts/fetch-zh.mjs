@@ -183,8 +183,24 @@ const converted = await toSimplified(uniqueZh, { cacheFile: VARIANT_CACHE });
 
 const toHans = (s) => (s && converted.has(s) ? converted.get(s) : s);
 
+/**
+ * Wikidata sometimes carries a "Chinese" label that is simply the Latin name.
+ * Treating that as a translation would make the UI print the name twice, so
+ * anything without a CJK character is discarded and filled from the curated
+ * transliteration list below.
+ */
+const hasCjk = (v) => /[\u4e00-\u9fff]/.test(String(v || ''));
+
 const playerZhFinal = {};
-for (const [id, z] of Object.entries(playerZh)) playerZhFinal[id] = toHans(z);
+let latinOnlyLabels = 0;
+for (const [id, z] of Object.entries(playerZh)) {
+  const hans = toHans(z);
+  if (!hasCjk(hans)) {
+    latinOnlyLabels += 1;
+    continue;
+  }
+  playerZhFinal[id] = hans;
+}
 
 // Fill the gaps from the curated transliteration list.
 let curatedFilled = 0;
@@ -233,6 +249,7 @@ const payload = {
 
 await writeJsonFile('data/zh.json', payload);
 
+if (latinOnlyLabels) log('zh', `  discarded ${latinOnlyLabels} Latin-only "Chinese" label(s) from Wikidata`);
 log(
   'zh',
   `Done — ${Object.keys(playerZhFinal).length} player names (${curatedFilled} via curated transliteration), ` +
