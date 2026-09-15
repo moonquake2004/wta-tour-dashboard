@@ -230,18 +230,25 @@ def calendar(ctx: Context) -> str:
 
 
 def _calendar_row(ctx: Context, event: dict) -> str:
-    """One row of the calendar; linked when stored results exist for the event."""
+    """
+    One row of the calendar.
+
+    The row itself is a plain container: an event page link wraps only the name,
+    because the champion cell holds its own link and nesting anchors is invalid
+    HTML (browsers split the outer one, which broke the row layout).
+    """
     key = f'{event["id"]}|{event["year"]}'
     digest = ctx.digest.get(key)
+    href = f'event-{event["id"]}-{event["year"]}.html'
 
     if digest:
-        row_open = f'<a class="tl-item" href="event-{event["id"]}-{event["year"]}.html">'
-        row_close = "</a>"
-        more = '<span class="tl-more">' + bi(
-            f'{digest["matches"]} 场赛果', f'{digest["matches"]} results'
-        ) + " →</span>"
+        name = (f'<a class="tl-name-link" href="{href}">{ctx.tournament(event["name"])}</a>'
+                + ctx.level_tag(event["level"]))
+        more = ('<a class="tl-more" href="' + href + '">'
+                + bi(f'{digest["matches"]} 场赛果', f'{digest["matches"]} results') + " →</a>")
     else:
-        row_open, row_close, more = '<div class="tl-item">', "</div>", ""
+        name = ctx.tournament(event["name"]) + ctx.level_tag(event["level"])
+        more = ""
 
     champion = event.get("champion")
     if champion:
@@ -250,326 +257,27 @@ def _calendar_row(ctx: Context, event: dict) -> str:
             + avatar(ctx, champion, 24)
             + f'<a href="player-{champion["id"]}.html">{ctx.name(champion)}</a></span>'
         )
+    elif event["status"] == "past":
+        # Team events such as the United Cup have no singles champion in the feed,
+        # and a dash reads better than an empty cell.
+        winner = f'<span class="tl-winner dim">{bi("团体赛", "Team event")}</span>'
     else:
-        winner = (
-            '<span class="tl-winner" style="color:var(--ivory-mute)">'
-            + ("" if event["status"] == "past" else bi("待定", "TBD"))
-            + "</span>"
-        )
+        winner = f'<span class="tl-winner dim">{bi("待定", "TBD")}</span>' 
 
     draw = f'<span>{bi(f"{event["draw"]} 签位", f"{event["draw"]} draw")}</span>' if event.get("draw") else ""
     prize = f'<span>{esc(money_short(event["prize"]))}</span>' if event.get("prize") else ""
-    country = esc(ctx.zh.get("countries", {}).get(event.get("country", ""), event.get("country", "")))
+    country = esc(ctx.zh.get("countries", {}).get(event.get("country") or "", event.get("country") or ""))
 
     return (
-        row_open
-        + '<div class="tl-date"><span class="tl-range">'
-        + esc(short_date(event["start"])) + " – " + esc(short_date(event["end"]))
-        + f'</span><span class="tl-count">{esc(event["city"])}</span></div>'
-        + '<div class="tl-main"><div class="tl-name">'
-        + ctx.tournament(event["name"]) + ctx.level_tag(event["level"])
-        + f'</div><div class="tl-meta">{ctx.surface_chip(event["surface"])}{draw}{prize}'
-        + f"<span>{country}</span></div></div>"
-        + f'<div class="tl-side">{winner}{more}</div>'
-        + row_close
+        '<div class="tl-item' + (" past" if event["status"] == "past" else "") + '">'
+        '<div class="tl-date">'
+        f'<span class="tl-range">{esc(short_date(event["start"]))} – {esc(short_date(event["end"]))}</span>'
+        f'<span class="tl-count">{esc(event["city"])}</span></div>'
+        f'<div class="tl-main"><div class="tl-name">{name}</div>'
+        f'<div class="tl-meta">{ctx.surface_chip(event["surface"])}{draw}{prize}'
+        f"<span>{country}</span></div></div>"
+        f'<div class="tl-side">{winner}{more}</div></div>'
     )
-
-
-# ---------------------------------------------------------------------------
-# Rankings
-# ---------------------------------------------------------------------------
-
-RANK_SORTS = [
-    ("points", "积分", "Points"),
-    ("name", "姓名", "Name"),
-    ("age", "年龄", "Age"),
-    ("move", "变动", "Move"),
-]
-
-
-def rankings(ctx: Context) -> str:
-    """
-    The full ranking table.
-
-    Sorting is pre-rendered: each sort order is a complete <tbody> inside a
-    `:target` section, so a link such as ``#sort-pct`` changes the order without
-    any script.  A reader who ignores the links still sees ranking order.
-    """
-    top3 = ctx.players[:3]
-    podium = "".join(
-        f'<a class="podium-card g{i + 1}" href="player-{p["id"]}.html">'
-        f'<span class="podium-n">No.{p["rank"]}</span>'
-        f'{avatar(ctx, p, 76)}'
-        f'<div class="podium-name">{ctx.name(p)}</div>'
-        f'<div class="podium-pts">{num(p["points"])}</div>'
-        f'<div class="podium-country">{esc(ctx.zh.get("countries", {}).get(p["country"], p["country"]))}</div></a>'
-        for i, p in enumerate(top3)
-    )
-
-    bodies = []
-    for key, zh, en in RANK_SORTS:
-        rows = sorted(ctx.players, key=lambda p: _rank_sort_key(p, key))
-        bodies.append(
-            f'<div class="rank-body" id="sort-{key}"><table class="rank-table">'
-            f"<thead><tr>"
-            f'<th class="c-pos">{bi("名次", "#")}</th><th class="c-player">{bi("球员", "Player")}</th>'
-            f'<th class="c-country">{bi("国家/地区", "Country")}</th><th class="c-move">{bi("变动", "Move")}</th>'
-            f'<th class="c-age">{bi("年龄", "Age")}</th><th class="c-ev">{bi("参赛", "Events")}</th>'
-            f'<th class="c-pts">{bi("积分", "Points")}</th></tr></thead>'
-            f'<tbody>{"".join(_rank_row(ctx, p) for p in rows)}</tbody></table></div>'
-        )
-
-    body = f'''
-<div class="wrap">
-  {page_head("PIF WTA Rankings · 官方单打排名", "", "官方单打排名", "Official singles ranking",
-             f'共 {num(len(ctx.players))} 位球员，名次变动与官方公布的上周排名对比。',
-             f'{num(len(ctx.players))} ranked players, with movement against the previous published week.')}
-  <div class="rank-podium">{podium}</div>
-  <div class="sort-bar">
-    <span class="sort-label">{bi("排序", "Sort")}</span>
-    <div class="seg-group sm">
-      <a class="seg" href="#sort-points">{bi("积分", "Points")}</a>
-      <a class="seg" href="#sort-name">{bi("姓名", "Name")}</a>
-      <a class="seg" href="#sort-age">{bi("年龄", "Age")}</a>
-      <a class="seg" href="#sort-move">{bi("变动", "Move")}</a>
-    </div>
-    <span class="dim" style="font-size:11.5px">{bi("默认按排名先后", "Default order is by ranking")}</span>
-  </div>
-  <div class="panel">
-    <div class="rank-head"><div>
-      <h3>{bi("单打世界排名", "Singles World Ranking")}</h3>
-      <p class="rank-desc">{bi("排名积分与名次变动均取自 WTA 官方榜单。",
-                               "Points and movement are as published by the WTA.")}</p>
-    </div><div class="rank-updated">{esc(timestamp(ctx.meta.get("rankingsAsOf")))}</div></div>
-    {"".join(bodies)}
-  </div>
-</div>
-'''
-    return shell(ctx, title="排名 · World Rankings", active="rankings.html", body=body)
-
-
-def _rank_sort_key(player: dict, key: str):
-    if key == "name":
-        return player["name"]
-    if key == "age":
-        return player.get("age") if player.get("age") is not None else 999
-    if key == "move":
-        return -(player.get("move") or 0)
-    return -player["points"]
-
-
-def _rank_row(ctx: Context, player: dict) -> str:
-    age = player.get("age")
-    return (
-        f'<tr class="clickable"><td>{player["rank"]}</td>'
-        f'<td class="l">{player_cell(ctx, player)}</td>'
-        f'<td class="c"><span class="tb-flag">{ctx.country(player["country"])}</span></td>'
-        f'<td>{ctx.move(player["move"])}</td>'
-        f'<td class="tb-num">{age if age is not None else "—"}</td>'
-        f'<td class="tb-num">{player.get("played") if player.get("played") is not None else "—"}</td>'
-        f'<td class="tb-num">{num(player["points"])}</td></tr>'
-    )
-
-
-# ---------------------------------------------------------------------------
-# Players
-# ---------------------------------------------------------------------------
-
-
-def players_page(ctx: Context) -> str:
-    """Every ranked player as a card, with the season record and serve splits."""
-    countries: dict[str, int] = {}
-    for p in ctx.players:
-        countries[p["country"]] = countries.get(p["country"], 0) + 1
-    top_countries = sorted(countries.items(), key=lambda kv: -kv[1])[:14]
-
-    chips = f'<a class="chip" href="#all">{bi("全部球员", "All players")}</a>' + "".join(
-        f'<a class="chip" href="#c-{esc(code)}">'
-        f'{esc(ctx.zh.get("countries", {}).get(code, code))} {count}</a>'
-        for code, count in top_countries
-    )
-
-    sections = ['<div class="player-grid" id="all">' + "".join(_player_card(ctx, p) for p in ctx.players) + "</div>"]
-    for code, _ in top_countries:
-        subset = [p for p in ctx.players if p["country"] == code]
-        sections.append(
-            f'<div class="player-grid" id="c-{esc(code)}">'
-            + "".join(_player_card(ctx, p) for p in subset)
-            + "</div>"
-        )
-
-    body = f'''
-<div class="wrap">
-  {page_head("Player directory · 球员名录", "", "所有排名球员，一处查全", "Every ranked player, in one place",
-             f'共 {num(len(ctx.players))} 位球员的生涯战绩、最高排名与赛季发球统计。点开任意球员查看完整档案。',
-             f'Career records, high rankings and season statistics for all {num(len(ctx.players))} ranked players.')}
-  <div class="filter-bar"><div class="chips">{chips}</div></div>
-  <div class="target-sections">{"".join(sections)}</div>
-</div>
-'''
-    return shell(ctx, title="球员 · Players", active="players.html", body=body)
-
-
-def _player_card(ctx: Context, player: dict) -> str:
-    season = player.get("season") or {}
-    serve = player.get("serve") or {}
-    wins, losses = season.get("w"), season.get("l")
-    total = (wins or 0) + (losses or 0)
-    win_pct = (wins / total * 100) if total else None
-    accent = "var(--gold-500)" if total and wins > losses else "var(--hard-600)"
-    form = "".join(
-        f'<i class="{"w" if w else "l"}">{"W" if w else "L"}</i>'
-        for w in (season.get("last10") or [])
-    )
-    age = player.get("age")
-    prize = (
-        f'<span>奖金 <b>{money_short(player["careerPrize"])}</b></span>'
-        if player.get("careerPrize")
-        else ""
-    )
-    return (
-        f'<a class="player-card" href="player-{player["id"]}.html" style="--pc-accent:{accent}">'
-        f'<div class="pc-top">{avatar(ctx, player, 54)}'
-        f'<div class="pc-id"><span class="pc-rank">No.{player["rank"]} · {num(player["points"])} pts</span>'
-        f'<span class="pc-name">{bi(player.get("zh") or player["name"], player["name"])}</span>'
-        f'<span class="pc-country">{esc(ctx.zh.get("countries", {}).get(player["country"], player["country"]))}'
-        f'{f" · {age} 岁" if age is not None else ""}</span></div></div>'
-        f'<div class="pc-stats">'
-        f'<div class="pc-stat"><b>{f"{wins}–{losses}" if wins is not None else "—"}</b>'
-        f'<span>{ctx.season} W–L</span></div>'
-        f'<div class="pc-stat"><b>{season.get("titles") if season.get("titles") is not None else "—"}</b>'
-        f'<span>冠军 Titles</span></div>'
-        f'<div class="pc-stat"><b>{f"{win_pct:.0f}%" if win_pct else "—"}</b>'
-        f'<span>胜率 Win %</span></div></div>'
-        f'{f"<div class=pc-form>{form}</div>" if form else ""}'
-        f'<div class="pc-serve">'
-        f'<span>ACE <b>{num(serve.get("aces"))}</b></span>'
-        f'<span>一发 <b>{pct(serve.get("firstServePct"))}</b></span>'
-        f'<span>发球局 <b>{pct(serve.get("serviceGamesWonPct"))}</b></span>'
-        f"</div></a>"
-    )
-
-
-# ---------------------------------------------------------------------------
-# Results
-# ---------------------------------------------------------------------------
-
-
-def results_page(ctx: Context) -> str:
-    """The season's results feed, newest first."""
-    rows = ctx.results
-    items = "".join(_result_row(ctx, r) for r in rows)
-    body = f'''
-<div class="wrap">
-  {page_head("Results · 比赛结果", "", "赛季比赛结果", "Season results",
-             f'共 {num(len(rows))} 场已收录赛果（本赛季），按日期由新到旧。',
-             f'{num(len(rows))} matches captured this season, newest first.')}
-  <div class="panel"><div class="result-list">{items
-    or '<div class="empty-state">' + bi("暂无赛果", "No results yet") + "</div>"}</div></div>
-</div>
-'''
-    return shell(ctx, title="赛果 · Results", active="results.html", body=body)
-
-
-def _result_row(ctx: Context, row: dict) -> str:
-    winner = ctx.player(row["winnerId"])
-    loser = ctx.player(row["loserId"])
-    winner_rank = f'<span class="rank">#{winner["rank"]}</span>' if winner.get("rank") else ""
-    loser_rank = f'<span class="rank">#{loser["rank"]}</span>' if loser.get("rank") else ""
-    return (
-        '<div class="result-row">'
-        f'<div class="result-date">{esc(iso_date(row["date"]))}</div>'
-        '<div class="result-main"><div class="result-players">'
-        f'{avatar(ctx, winner, 26)}'
-        f'<a class="w" href="player-{winner["id"]}.html">{ctx.name(winner)}</a>{winner_rank}'
-        f'<span class="d">d.</span>{avatar(ctx, loser, 26)}'
-        f'<a class="l" href="player-{loser["id"]}.html">{ctx.name(loser)}</a>{loser_rank}'
-        "</div>"
-        f'<div class="result-ev">{ctx.round_(row["round"])}<span>·</span>'
-        f'{ctx.tournament(row["event"])}{ctx.surface_chip(row["surface"])}'
-        f'{ctx.level_tag(row["level"])}</div></div>'
-        f'<div class="result-score">{esc(row["score"])}</div></div>'
-    )
-
-
-# ---------------------------------------------------------------------------
-# Statistics
-# ---------------------------------------------------------------------------
-
-
-def stats_page(ctx: Context) -> str:
-    leader_cards = "".join(_leader_card(ctx, board) for board in ctx.boards)
-    career = ctx.career
-    career_rows = "".join(
-        f'<tr><td>{i + 1}</td>'
-        f'<td class="l"><div class="tb-player">{avatar(ctx, ctx.player(p["id"]), 32)}'
-        f'<span class="tb-nm">{bi(p.get("zh") or p["name"], p["name"])}</span></div></td>'
-        f'<td class="c"><span class="tb-flag">{ctx.country(p.get("country"))}</span></td>'
-        f'<td class="tb-num">{num(p.get("titles"))}</td></tr>'
-        for i, p in enumerate(career.get("titles", []))
-    )
-    body = f'''
-<div class="wrap">
-  {page_head(f"Season statistics · {ctx.season} 赛季统计", "", "每一项技术统计的领跑者",
-             "Leaders across every measured stroke",
-             "全部由 WTA 官方发布的球员赛季记录计算得出，并设置最低场次门槛以排除小样本。",
-             "Computed from the WTA's official per-player season records, with a minimum match count on every board.")}
-  <div class="leader-grid">{leader_cards}</div>
-  <div class="panel">
-    <div class="panel-head"><h3>{bi("生涯领跑榜 · 单打冠军", "All-Time Leaders · Singles titles")}</h3>
-      <span class="panel-note">{bi("现役排名球员中的历史累计", "All-time among currently ranked players")}</span></div>
-    <div class="table-scroll"><table class="rank-table title-board">
-      <thead><tr><th class="c-pos">{bi("名次", "#")}</th><th class="c-player">{bi("球员", "Player")}</th>
-      <th class="c-country">{bi("国家/地区", "Country")}</th><th class="c-titles">{bi("冠军", "Titles")}</th></tr></thead>
-      <tbody>{career_rows}</tbody></table></div>
-  </div>
-  <div class="panel">
-    <div class="panel-head"><h3>{bi("生涯领跑榜 · 胜场与奖金", "All-Time Leaders · Wins & prize money")}</h3></div>
-    <div class="career-grid">
-      {_career_col("生涯胜场", "Career match wins", career.get("careerWins", []), lambda p: num(p.get("won")))}
-      {_career_col("生涯奖金", "Career prize money", career.get("prizeMoney", []), lambda p: money_short(p.get("prize")))}
-    </div>
-  </div>
-</div>
-'''
-    return shell(ctx, title="数据 · Statistics", active="stats.html", body=body)
-
-
-def _leader_card(ctx: Context, board: dict) -> str:
-    top = board["rows"][0]["value"] if board["rows"] else 1
-    rows = "".join(
-        f'<div class="lb-row"><span class="i">{i + 1}</span>{avatar(ctx, ctx.player(r["id"]), 28)}'
-        f'<span class="n"><b>{esc(r.get("zh") or r["name"])}</b>'
-        f'<span class="en">{esc(r["name"])}</span></span>'
-        f'<span class="v">{pct(r["value"]) if board["unit"] == "%" else num(r["value"])}</span>'
-        f'<span class="lb-bar"><i style="width:{max(2, r["value"] / top * 100):.1f}%"></i></span></div>'
-        for i, r in enumerate(board["rows"][:10])
-    )
-    note = BOARD_NOTES.get(board["key"], "")
-    return (
-        f'<div class="leader-card"><div class="leader-head">'
-        f'<h4>{bi(BOARD_ZH.get(board["key"], ""), board["label"])}</h4>'
-        f'<span class="u">{esc("season %" if board["unit"] == "%" else "total")}</span></div>'
-        f'<div class="leader-body">{rows}</div>'
-        f'<div class="card-bd dim" style="font-size:11.5px;border-top:1px solid rgba(255,255,255,.07)">'
-        f'{bi(note, "")}</div></div>'
-    )
-
-
-BOARD_NOTES = {
-    "aces": "整个赛季发出的 ACE 球总数。ACE 由主裁与赛场线审设备记录，不同赛事的判定技术不同，跨赛事并不完全可比。",
-    "doubleFaults": "双误总数。这是一项越低越好的统计，因此单独成榜。",
-    "firstServePct": "一发落入有效区的比例。一发成功率高的球员，通常在一发球速上有所取舍。",
-    "firstServeWonPct": "一发得分率——判断一周发球是否具有统治力的最佳单一指标。",
-    "secondServeWonPct": "二发得分率。这一项最能区分巡回赛顶级接发球员与其他球员。",
-    "serviceGamesWonPct": "发球局保发比例。在女子巡回赛中超过 75% 已属顶级水平。",
-    "returnGamesWonPct": "接发局转化为破发的比例。",
-    "returnPointsWonPct": "接发球得分比例。",
-    "breakPointsSavedPct": "面对破发点时的挽救比例。",
-    "breakPointsConvertedPct": "获得破发机会时的转化比例。",
-    "totalPointsWonPct": "全部得分的比例——衡量一个赛季最简洁的单一数字。",
-    "servicePointsWonPct": "发球分得分比例。",
-}
 
 
 # ---------------------------------------------------------------------------
@@ -1037,3 +745,309 @@ def player_page_light(ctx: Context, player: dict, h2h_rows: list) -> str:
 </div>
 '''
     return shell(ctx, title=player.get("zh") or player["name"], active="players.html", body=body)
+
+
+# ---------------------------------------------------------------------------
+# Results
+# ---------------------------------------------------------------------------
+
+
+def results_page(ctx: Context) -> str:
+    """The season's results feed, newest first."""
+    items = "".join(_result_row(ctx, r) for r in ctx.results)
+    body = f'''
+<div class="wrap">
+  {page_head("Results · 比赛结果", "", "赛季比赛结果", "Season results",
+             f'共 {num(len(ctx.results))} 场已收录赛果（本赛季），按日期由新到旧。',
+             f'{num(len(ctx.results))} matches captured this season, newest first.')}
+  <div class="panel"><div class="result-list">{items
+    or '<div class="empty-state">' + bi("暂无赛果", "No results yet") + "</div>"}</div></div>
+</div>
+'''
+    return shell(ctx, title="赛果 · Results", active="results.html", body=body)
+
+
+def _result_row(ctx: Context, row: dict) -> str:
+    winner = ctx.player(row["winnerId"])
+    loser = ctx.player(row["loserId"])
+    winner_rank = f'<span class="rank">#{winner["rank"]}</span>' if winner.get("rank") else ""
+    loser_rank = f'<span class="rank">#{loser["rank"]}</span>' if loser.get("rank") else ""
+    return (
+        '<div class="result-row">'
+        f'<div class="result-date">{esc(iso_date(row["date"]))}</div>'
+        '<div class="result-main"><div class="result-players">'
+        f'{avatar(ctx, winner, 26)}'
+        f'<a class="w" href="player-{winner["id"]}.html">{ctx.name(winner)}</a>{winner_rank}'
+        f'<span class="d">d.</span>{avatar(ctx, loser, 26)}'
+        f'<a class="l" href="player-{loser["id"]}.html">{ctx.name(loser)}</a>{loser_rank}'
+        "</div>"
+        f'<div class="result-ev">{ctx.round_(row["round"])}<span>·</span>'
+        f'{ctx.tournament(row["event"])}{ctx.surface_chip(row["surface"])}'
+        f'{ctx.level_tag(row["level"])}</div></div>'
+        f'<div class="result-score">{esc(row["score"])}</div></div>'
+    )
+
+
+# ---------------------------------------------------------------------------
+# Statistics
+# ---------------------------------------------------------------------------
+
+
+def stats_page(ctx: Context) -> str:
+    """Twelve season leaderboards plus the career leaders."""
+    leader_cards = "".join(_leader_card(ctx, board) for board in ctx.boards)
+    career = ctx.career
+    career_rows = "".join(
+        f'<tr><td>{i + 1}</td>'
+        f'<td class="l"><div class="tb-player">{avatar(ctx, ctx.player(p["id"]), 32)}'
+        f'<span class="tb-nm">{bi(p.get("zh") or p["name"], p["name"])}</span></div></td>'
+        f'<td class="c"><span class="tb-flag">{ctx.country(p.get("country"))}</span></td>'
+        f'<td class="tb-num">{num(p.get("titles"))}</td></tr>'
+        for i, p in enumerate(career.get("titles", []))
+    )
+    body = f'''
+<div class="wrap">
+  {page_head(f"Season statistics · {ctx.season} 赛季统计", "", "每一项技术统计的领跑者",
+             "Leaders across every measured stroke",
+             "全部由 WTA 官方发布的球员赛季记录计算得出，并设置最低场次门槛以排除小样本。",
+             "Computed from the WTA's official per-player season records, with a minimum match count on every board.")}
+  <div class="leader-grid">{leader_cards}</div>
+  <div class="panel">
+    <div class="panel-head"><h3>{bi("生涯领跑榜 · 单打冠军", "All-Time Leaders · Singles titles")}</h3>
+      <span class="panel-note">{bi("现役排名球员中的历史累计", "All-time among currently ranked players")}</span></div>
+    <div class="table-scroll"><table class="rank-table title-board">
+      <thead><tr><th class="c-pos">{bi("名次", "#")}</th><th class="c-player">{bi("球员", "Player")}</th>
+      <th class="c-country">{bi("国家/地区", "Country")}</th><th class="c-titles">{bi("冠军", "Titles")}</th></tr></thead>
+      <tbody>{career_rows}</tbody></table></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>{bi("生涯领跑榜 · 胜场与奖金", "All-Time Leaders · Wins & prize money")}</h3></div>
+    <div class="career-grid">
+      {_career_col("生涯胜场", "Career match wins", career.get("careerWins", []), lambda p: num(p.get("won")))}
+      {_career_col("生涯奖金", "Career prize money", career.get("prizeMoney", []), lambda p: money_short(p.get("prize")))}
+    </div>
+  </div>
+</div>
+'''
+    return shell(ctx, title="数据 · Statistics", active="stats.html", body=body)
+
+
+def _leader_card(ctx: Context, board: dict) -> str:
+    top = board["rows"][0]["value"] if board["rows"] else 1
+    rows = "".join(
+        f'<div class="lb-row"><span class="i">{i + 1}</span>{avatar(ctx, ctx.player(r["id"]), 28)}'
+        f'<span class="n"><b>{esc(r.get("zh") or r["name"])}</b>'
+        f'<span class="en">{esc(r["name"])}</span></span>'
+        f'<span class="v">{pct(r["value"]) if board["unit"] == "%" else num(r["value"])}</span>'
+        f'<span class="lb-bar"><i style="width:{max(2, r["value"] / top * 100):.1f}%"></i></span></div>'
+        for i, r in enumerate(board["rows"][:10])
+    )
+    note = BOARD_NOTES.get(board["key"], "")
+    note_html = bi(note, "") if note else ""
+    return (
+        f'<div class="leader-card"><div class="leader-head">'
+        f'<h4>{bi(BOARD_ZH.get(board["key"], ""), board["label"])}</h4>'
+        f'<span class="u">{esc("season %" if board["unit"] == "%" else "total")}</span></div>'
+        f'<div class="leader-body">{rows}</div>'
+        + (f'<div class="card-bd dim" style="font-size:11.5px;border-top:1px solid rgba(255,255,255,.07)">{note_html}</div>' if note_html else "")
+        + "</div>"
+    )
+
+
+# 数据榜中文名与说明
+BOARD_NOTES = {
+    "aces": "整个赛季发出的 ACE 球总数。ACE 由主裁与赛场线审设备记录，不同赛事的判定技术不同，跨赛事并不完全可比。",
+    "doubleFaults": "双误总数。这是一项越低越好的统计，因此单独成榜。",
+    "firstServePct": "一发落入有效区的比例。一发成功率高的球员，通常在一发球速上有所取舍。",
+    "firstServeWonPct": "一发得分率——判断一周发球是否具有统治力的最佳单一指标。",
+    "secondServeWonPct": "二发得分率。这一项最能区分巡回赛顶级接发球员与其他球员。",
+    "serviceGamesWonPct": "发球局保发比例。在女子巡回赛中超过 75% 已属顶级水平。",
+    "returnGamesWonPct": "接发局转化为破发的比例。",
+    "returnPointsWonPct": "接发球得分比例。",
+    "breakPointsSavedPct": "面对破发点时的挽救比例。",
+    "breakPointsConvertedPct": "获得破发机会时的转化比例。",
+    "totalPointsWonPct": "全部得分的比例——衡量一个赛季最简洁的单一数字。",
+    "servicePointsWonPct": "发球分得分比例。",
+}
+
+
+# ---------------------------------------------------------------------------
+# Rankings
+# ---------------------------------------------------------------------------
+
+RANK_SORTS = [
+    ("points", "积分", "Points"),
+    ("name", "姓名", "Name"),
+    ("age", "年龄", "Age"),
+    ("move", "变动", "Move"),
+]
+
+
+def rankings(ctx: Context) -> str:
+    """
+    The full ranking table.
+
+    Sorting is pre-rendered: each order is a complete <table> inside a section
+    revealed by `#sort-<key>`, so the order changes by URL fragment with no
+    script.  A reader who ignores the links still sees ranking order.
+    """
+    top3 = ctx.players[:3]
+    podium = "".join(
+        f'<a class="podium-card g{i + 1}" href="player-{p["id"]}.html">'
+        f'<span class="podium-n">No.{p["rank"]}</span>'
+        f'{avatar(ctx, p, 76)}'
+        f'<div class="podium-name">{ctx.name(p)}</div>'
+        f'<div class="podium-pts">{num(p["points"])}</div>'
+        f'<div class="podium-country">{esc(ctx.zh.get("countries", {}).get(p["country"], p["country"]))}</div></a>'
+        for i, p in enumerate(top3)
+    )
+
+    def table(rows: list[dict]) -> str:
+        body = "".join(
+            f'<tr><td>{p["rank"]}</td>'
+            f'<td class="l">{player_cell(ctx, p)}</td>'
+            f'<td class="c"><span class="tb-flag">{ctx.country(p["country"])}</span></td>'
+            f'<td>{ctx.move(p["move"])}</td>'
+            f'<td class="tb-num">{p.get("age") if p.get("age") is not None else "—"}</td>'
+            f'<td class="tb-num">{p.get("played") if p.get("played") is not None else "—"}</td>'
+            f'<td class="tb-num">{num(p["points"])}</td></tr>'
+            for p in rows
+        )
+        return (
+            '<table class="rank-table"><thead><tr>'
+            f'<th class="c-pos">{bi("名次", "#")}</th><th class="c-player">{bi("球员", "Player")}</th>'
+            f'<th class="c-country">{bi("国家/地区", "Country")}</th><th class="c-move">{bi("变动", "Move")}</th>'
+            f'<th class="c-age">{bi("年龄", "Age")}</th><th class="c-ev">{bi("参赛", "Events")}</th>'
+            f'<th class="c-pts">{bi("积分", "Points")}</th></tr></thead>'
+            f"<tbody>{body}</tbody></table>"
+        )
+
+    tables = []
+    for key, zh, en in RANK_SORTS:
+        rows = sorted(ctx.players, key=lambda p: _rank_sort_key(p, key))
+        tables.append(
+            f'<div class="rank-body" id="sort-{key}"><div class="table-scroll">{table(rows)}</div></div>'
+        )
+
+    body = f'''
+<div class="wrap">
+  {page_head("PIF WTA Rankings · 官方单打排名", "", "官方单打排名", "Official singles ranking",
+             f'共 {num(len(ctx.players))} 位球员，名次变动与官方公布的上周排名对比。',
+             f'{num(len(ctx.players))} ranked players, with movement against the previous published week.')}
+  <div class="rank-podium">{podium}</div>
+  <div class="sort-bar">
+    <span class="sort-label">{bi("排序", "Sort")}</span>
+    <div class="seg-group sm">
+      <a class="seg" href="#sort-points">{bi("积分", "Points")}</a>
+      <a class="seg" href="#sort-name">{bi("姓名", "Name")}</a>
+      <a class="seg" href="#sort-age">{bi("年龄", "Age")}</a>
+      <a class="seg" href="#sort-move">{bi("变动", "Move")}</a>
+    </div>
+    <span class="dim" style="font-size:11.5px">{bi("默认按排名先后", "Default order is by ranking")}</span>
+  </div>
+  <div class="panel">
+    <div class="rank-head"><div>
+      <h3>{bi("单打世界排名", "Singles World Ranking")}</h3>
+      <p class="rank-desc">{bi("排名积分与名次变动均取自 WTA 官方榜单。",
+                               "Points and movement are as published by the WTA.")}</p>
+    </div><div class="rank-updated">{esc(timestamp(ctx.meta.get("rankingsAsOf")))}</div></div>
+    {"".join(tables)}
+  </div>
+</div>
+'''
+    return shell(ctx, title="排名 · World Rankings", active="rankings.html", body=body)
+
+
+def _rank_sort_key(player: dict, key: str):
+    if key == "name":
+        return player["name"]
+    if key == "age":
+        return player.get("age") if player.get("age") is not None else 999
+    if key == "move":
+        return -(player.get("move") or 0)
+    return -player["points"]
+
+
+# ---------------------------------------------------------------------------
+# Players
+# ---------------------------------------------------------------------------
+
+
+def players_page(ctx: Context) -> str:
+    """Every ranked player as a card, grouped by country."""
+    counts: dict[str, int] = {}
+    for p in ctx.players:
+        counts[p["country"]] = counts.get(p["country"], 0) + 1
+    top_countries = sorted(counts.items(), key=lambda kv: -kv[1])[:14]
+
+    chips = f'<a class="chip" href="#all">{bi("全部球员", "All players")}</a>' + "".join(
+        f'<a class="chip" href="#c-{esc(code)}">'
+        f'{esc(ctx.zh.get("countries", {}).get(code, code))} {count}</a>'
+        for code, count in top_countries
+    )
+
+    sections = [
+        '<div class="player-grid" id="all">'
+        + "".join(_player_card(ctx, p) for p in ctx.players)
+        + "</div>"
+    ]
+    for code, _ in top_countries:
+        subset = [p for p in ctx.players if p["country"] == code]
+        sections.append(
+            f'<div class="player-grid" id="c-{esc(code)}">'
+            + "".join(_player_card(ctx, p) for p in subset)
+            + "</div>"
+        )
+
+    body = f'''
+<div class="wrap">
+  {page_head("Player directory · 球员名录", "", "所有排名球员，一处查全", "Every ranked player, in one place",
+             f'共 {num(len(ctx.players))} 位球员的生涯战绩、最高排名与赛季发球统计。',
+             f'Career records, high rankings and season statistics for all {num(len(ctx.players))} ranked players.')}
+  <div class="filter-bar"><div class="chips">{chips}</div></div>
+  {"".join(sections)}
+</div>
+'''
+    return shell(ctx, title="球员 · Players", active="players.html", body=body)
+
+
+def _player_card(ctx: Context, player: dict) -> str:
+    season = player.get("season") or {}
+    serve = player.get("serve") or {}
+    wins, losses = season.get("w"), season.get("l")
+    total = (wins or 0) + (losses or 0)
+    win_pct = (wins / total * 100) if total else None
+    accent = "var(--gold-500)" if total and wins > losses else "var(--hard-600)"
+    form = "".join(
+        f'<i class="{"w" if w else "l"}">{"W" if w else "L"}</i>'
+        for w in (season.get("last10") or [])
+    )
+    age = player.get("age")
+    age_text = f" · {age} 岁" if age is not None else ""
+    title_txt = season.get("titles") if season.get("titles") is not None else "—"
+    pct_txt = f"{win_pct:.0f}%" if win_pct else "—"
+    record_txt = f"{wins}–{losses}" if wins is not None else "—"
+    prize = (
+        f'<span>奖金 <b>{money_short(player["careerPrize"])}</b></span>'
+        if player.get("careerPrize")
+        else ""
+    )
+    country = esc(ctx.zh.get("countries", {}).get(player["country"], player["country"]))
+    form_html = f'<div class="pc-form">{form}</div>' if form else ""
+    return (
+        f'<a class="player-card" href="player-{player["id"]}.html" style="--pc-accent:{accent}">'
+        f'<div class="pc-top">{avatar(ctx, player, 54)}'
+        f'<div class="pc-id"><span class="pc-rank">No.{player["rank"]} · {num(player["points"])} pts</span>'
+        f'<span class="pc-name">{bi(player.get("zh") or player["name"], player["name"])}</span>'
+        f'<span class="pc-country">{country}{age_text}</span></div></div>'
+        f'<div class="pc-stats">'
+        f'<div class="pc-stat"><b>{record_txt}</b><span>{ctx.season} W–L</span></div>'
+        f'<div class="pc-stat"><b>{title_txt}</b><span>冠军 Titles</span></div>'
+        f'<div class="pc-stat"><b>{pct_txt}</b><span>胜率 Win %</span></div></div>'
+        f'{form_html}'
+        f'<div class="pc-serve">'
+        f'<span>ACE <b>{num(serve.get("aces"))}</b></span>'
+        f'<span>一发 <b>{pct(serve.get("firstServePct"))}</b></span>'
+        f'<span>发球局 <b>{pct(serve.get("serviceGamesWonPct"))}</b></span>'
+        f'{prize}</div></a>'
+    )

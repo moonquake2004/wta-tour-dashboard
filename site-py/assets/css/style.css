@@ -986,3 +986,38 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
   font-family:var(--font-en);font-size:calc(var(--av,34px) * 0.34);
   letter-spacing:.02em;color:var(--ivory-mute)
 }
+
+/* ==========================================================================
+   赛程行
+   --------------------------------------------------------------------------
+   整行不再是链接（冠军格里另有链接，锚点不能嵌套）；事件名单独可点。
+   ========================================================================== */
+.tl-item{display:grid;grid-template-columns:104px minmax(0,1fr) auto;gap:16px;
+  align-items:center;padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.05);
+  transition:background .14s}
+.tl-item:last-child{border-bottom:none}
+.tl-item:hover{background:rgba(42,176,114,.09)}
+.tl-name-link{color:inherit;transition:color .15s}
+.tl-name-link:hover{color:var(--gold-400)}
+.tl-side{display:flex;flex-direction:column;align-items:flex-end;gap:5px;text-align:right}
+.tl-more{font-family:var(--font-ui);font-size:10.5px;letter-spacing:.05em;
+  color:var(--grass-400);white-space:nowrap}
+.tl-more .cn{font-family:var(--font-cn)}
+.tl-more:hover{color:var(--gold-400)}
+
+@media(max-width:860px){
+  .tl-item{grid-template-columns:86px minmax(0,1fr);gap:11px;padding:11px 14px}
+  .tl-side{grid-column:2;align-items:flex-start;text-align:left}
+}
+
+/* 赛程右列：即便没有冠军也保留最小宽度，避免该行网格塌陷 */
+.tl-side{min-width:172px}
+@media(max-width:860px){.tl-side{min-width:0}}
+
+/* 命中区下限：少数行内链接（球员名、比分行）需要 24px 才满足触控要求 */
+.result-players a,.result-players .rank,
+.match .m-name,.match .m-score,
+.ev-side .ev-nm,.champ-ev a,.rival,.h2h-pick-row .sn{
+  display:inline-flex;align-items:center;min-height:24px
+}
+.ev-side .ev-nm{min-height:26px}
