@@ -17,6 +17,7 @@ import { ROOT } from './lib.mjs';
 const STEPS = [
   'fetch-rankings.mjs',
   'derive.mjs',
+  'fetch-events.mjs',
   'fetch-zh.mjs',
   'generate-data.mjs',
   'build-site.mjs',

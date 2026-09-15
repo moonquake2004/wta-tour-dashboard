@@ -38,6 +38,7 @@ console.log('\n▶ Verifying dashboard payload\n');
 const D = await loadGlobal('dashboard.js', 'WTA_DATA');
 const H = await loadGlobal('h2h.js', 'WTA_H2H');
 const HM = await loadGlobal('h2h-matches.js', 'WTA_H2H_MATCHES');
+const EV = await loadGlobal('events.js', 'WTA_EVENTS');
 
 const META = D.meta;
 const SEASON = META.season;
@@ -148,6 +149,61 @@ check(
   [...new Set(D.players.map((p) => p.country))].every((c) => META.zh.countries[c]),
   [...new Set(D.players.map((p) => p.country))].filter((c) => !META.zh.countries[c]).join(','),
 );
+
+/* ------------------------------------------------------- event results */
+const evKeys = Object.keys(EV);
+check('event results are populated', evKeys.length >= 100, String(evKeys.length));
+check(
+  'every event result maps to a calendar event',
+  evKeys.every((k) => {
+    const [id, year] = k.split('|').map(Number);
+    return D.calendar.some((e) => e.id === id && e.year === year);
+  }),
+);
+const evRounds = evKeys.flatMap((k) => EV[k].rounds);
+check(
+  'every round holds at least one match',
+  evRounds.every((r) => r.matches.length > 0),
+);
+const evMatches = evRounds.flatMap((r) => r.matches);
+check('event matches total is substantial', evMatches.length >= 5000, String(evMatches.length));
+check(
+  'every match names both players and a winner side',
+  evMatches.every(
+    (m) =>
+      m.a && m.b && m.a.name && m.b.name && (m.winner === 'a' || m.winner === 'b'),
+  ),
+);
+check(
+  'no match lists the same player twice',
+  evMatches.every((m) => m.a.id !== m.b.id),
+);
+check(
+  'every match carries a score or a walkover note',
+  evMatches.every((m) => /\d/.test(m.score || '') || m.note),
+  `${evMatches.filter((m) => !/\d/.test(m.score || '') && !m.note).length} without either`,
+);
+// A tournament cannot have two finals, and the final must hold exactly one match.
+const evWithFinal = evKeys.filter((k) => EV[k].rounds.some((r) => r.label === 'F'));
+check(
+  'no event has more than one final round',
+  evKeys.every((k) => EV[k].rounds.filter((r) => r.label === 'F').length <= 1),
+);
+check(
+  'finals hold exactly one match',
+  evRounds.filter((r) => r.label === 'F').every((r) => r.matches.length === 1),
+  evRounds.filter((r) => r.label === 'F' && r.matches.length !== 1).length + ' malformed',
+);
+check('most completed events have a final', evWithFinal.length >= evKeys.length * 0.8,
+  `${evWithFinal.length}/${evKeys.length}`);
+// The digest in the main payload must agree with the full draw.
+const digestMismatch = evKeys.filter((k) => {
+  const d = D.eventDigest[k];
+  const real = EV[k].rounds.reduce((n, r) => n + r.matches.length, 0);
+  return !d || d.matches !== real;
+});
+check('calendar digest matches the full draw', digestMismatch.length === 0,
+  digestMismatch.slice(0, 3).join(', '));
 
 /* ---------------------------------------------------------------- h2h */
 const pairs = Object.keys(H.pairs);

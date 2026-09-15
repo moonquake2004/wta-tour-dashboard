@@ -24,6 +24,7 @@
     "site": "node scripts/build-site.mjs",
     "serve": "node scripts/serve.mjs",
     "verify": "node scripts/verify.mjs && node scripts/verify-dashboard.mjs",
-    "publish": "node scripts/generate-data.mjs && node scripts/build-site.mjs && node scripts/verify-dashboard.mjs"
+    "publish": "node scripts/generate-data.mjs && node scripts/build-site.mjs && node scripts/verify-dashboard.mjs",
+    "data:events": "node scripts/fetch-events.mjs"
   }
 }

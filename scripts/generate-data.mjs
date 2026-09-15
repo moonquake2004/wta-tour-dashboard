@@ -37,6 +37,7 @@ const [rank, bios, stats, history, matches, tour, boardsIn, h2h, names, index, z
     readJson('players-index.json', []),
     readJson('zh.json', { players: {}, tournaments: {}, countries: {}, levels: {}, rounds: {}, surfaces: {} }),
   ]);
+const eventMatches = await readJson('event-matches.json', {});
 
 const SEASON = boardsIn.season || new Date().getUTCFullYear();
 const rankById = new Map(rank.players.map((p) => [p.id, p]));
@@ -280,9 +281,73 @@ for (const [key, v] of Object.entries(h2h)) {
 /* Calendar                                                            */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Per-event results, resolved for display.
+ *
+ * Every match already carries both players, the score and the winner; only the
+ * Chinese names and current ranking are missing, so they are merged in here.
+ */
+const eventResults = {};
+for (const [key, ev] of Object.entries(eventMatches)) {
+  eventResults[key] = {
+    id: ev.id,
+    year: ev.year,
+    name: ev.name,
+    zh: zh.tournaments?.[ev.name] || '',
+    level: ev.level,
+    surface: ev.surface,
+    city: ev.city,
+    country: ev.country,
+    drawSize: ev.drawSize,
+    rounds: ev.rounds.map((r) => ({
+      key: r.key,
+      label: r.label,
+      qualifying: r.qualifying,
+      matches: r.matches.map((m) => ({
+        round: r.label,
+        qualifying: r.qualifying,
+        score: m.score,
+        note: m.note,
+        date: m.date,
+        court: m.court,
+        a: { ...m.a, zh: zhName(m.a.id) },
+        b: { ...m.b, zh: zhName(m.b.id) },
+        winner: m.winnerSide === 'A' ? 'a' : 'b',
+      })),
+    })),
+  };
+}
+
+/**
+ * A compact per-event summary stays in the main payload so the calendar can show
+ * the final, the champion and the match count immediately; the full draw ships
+ * separately and is injected when an event is opened.
+ */
+const eventDigest = {};
+for (const [key, ev] of Object.entries(eventResults)) {
+  const all = ev.rounds.flatMap((r) => r.matches);
+  const final = ev.rounds.find((r) => r.label === 'F');
+  const fm = final && final.matches[0];
+  eventDigest[key] = {
+    id: ev.id,
+    year: ev.year,
+    rounds: ev.rounds.length,
+    matches: all.length,
+    final: fm
+      ? {
+          a: { id: fm.a.id, name: fm.a.name, zh: fm.a.zh },
+          b: { id: fm.b.id, name: fm.b.name, zh: fm.b.zh },
+          score: fm.score,
+          winner: fm.winner,
+        }
+      : null,
+  };
+}
+
 const calendar = tour.events
   .filter((e) => e.year >= SEASON - 1)
   .map((e) => ({
+    id: e.id,
     name: e.name,
     zh: zh.tournaments?.[e.name] || '',
     year: e.year,
@@ -361,6 +426,7 @@ const career = {
 const payload = {
   meta,
   players,
+  eventDigest,
   results: recentResults.map((r) => ({
     ...r,
     winner: { id: r.winnerId, ...displayName(r.winnerId), zh: zh.players?.[r.winnerId] || '' },
@@ -378,6 +444,10 @@ const payload = {
 const mainJs = `/* WTA Tour dashboard data — generated ${meta.generatedAt} */\nwindow.WTA_DATA=${JSON.stringify(payload)};\n`;
 await writeFile(resolve(ROOT, 'data', 'dashboard.js'), mainJs, 'utf8');
 
+// Full per-event draws: large, and only needed when an event is opened.
+const eventsJs = `/* Per-event results — generated ${meta.generatedAt} */\nwindow.WTA_EVENTS=${JSON.stringify(eventResults)};\n`;
+await writeFile(resolve(ROOT, 'data', 'events.js'), eventsJs, 'utf8');
+
 // The head-to-head index is large and only needed by one panel, so it ships
 // separately and is not part of the initial payload.
 const h2hSummaryJs = `/* Head-to-head summary — generated ${meta.generatedAt} */\nwindow.WTA_H2H=${JSON.stringify({ players: h2hRoster, pairs: h2hPairs })};\n`;
@@ -394,7 +464,11 @@ log(
 );
 log(
   'gen',
-  `  dashboard.js ${mb(mainJs)} MB · h2h.js ${mb(h2hSummaryJs)} MB · ` +
-    `h2h-matches.js ${mb(h2hMatchesJs)} MB (${Object.keys(h2hPairs).length} pairings, ` +
-    `${Object.keys(h2hRoster).length} players)`,
+  `  dashboard.js ${mb(mainJs)} MB · events.js ${mb(eventsJs)} MB · ` +
+    `h2h.js ${mb(h2hSummaryJs)} MB · h2h-matches.js ${mb(h2hMatchesJs)} MB`,
+);
+log(
+  'gen',
+  `  ${Object.keys(eventResults).length} events with results (${Object.values(eventDigest).reduce((n, d) => n + d.matches, 0)} matches) · ` +
+    `${Object.keys(h2hPairs).length} H2H pairings`,
 );

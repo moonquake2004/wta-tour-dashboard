@@ -24,6 +24,7 @@ const STEPS = [
   { name: 'players', file: 'fetch-players.mjs', skip: skip('players') },
   { name: 'matches', file: 'fetch-matches.mjs', skip: skip('matches') },
   { name: 'tournaments', file: 'fetch-tournaments.mjs', skip: skip('tournaments') },
+  { name: 'event-results', file: 'fetch-events.mjs', skip: skip('events') },
   { name: 'h2h', file: 'fetch-h2h.mjs' },
   { name: 'derive', file: 'derive.mjs' },
   { name: 'compact', file: 'compact.mjs' },

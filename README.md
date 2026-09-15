@@ -20,7 +20,7 @@ broadcast results dashboard:
 | Panel | 中文 | Contents |
 | --- | --- | --- |
 | Overview | 总览 | Season KPIs, champion wall, latest results, top 10, stat leaders, career leaders |
-| Calendar | 赛程 | Every main-tour event with level, surface, draw, prize money and champion |
+| Calendar | 赛程 | Every main-tour event with level, surface, draw, prize money and champion — **click any event for its complete singles results** |
 | Results | 赛果 | Season match results with round, event and surface filters |
 | Rankings | 排名 | The official singles ranking with podium, movement and ranking trajectories |
 | Players | 球员 | Player cards with season W–L, form, titles and serve splits |
@@ -38,6 +38,10 @@ broadcast results dashboard:
   companion snooker dashboard uses). All sampled text meets WCAG AA contrast.
 - **Player detail modal** — click any player anywhere for season records by year,
   serve splits, career highs and prize money.
+- **Event results modal** — click any event on the calendar for its complete
+  singles draw by round, qualifying included, with seeds, countries, scores,
+  tie-breaks and retirement notes. Read from the official per-event match feed
+  (`tournaments/{id}/{year}/matches`).
 - **No runtime requests for content.** The payload is loaded as a plain script
   global, so the published site is `index.html` + two assets + two data files.
 

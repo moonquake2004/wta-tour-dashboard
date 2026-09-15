@@ -14,6 +14,24 @@
    * head-to-head panel needs them: they are 3.4 MB, and the win/loss record for
    * any pairing is already in the summary payload.
    */
+  /**
+   * Per-event draws ship separately (3.2 MB) and are injected the first time an
+   * event is opened; the calendar itself only needs the digest.
+   */
+  var eventsPromise = null;
+  function loadEventResults() {
+    if (window.WTA_EVENTS) return Promise.resolve(window.WTA_EVENTS);
+    if (eventsPromise) return eventsPromise;
+    eventsPromise = new Promise(function (resolve) {
+      var s = document.createElement('script');
+      s.src = 'data/events.js';
+      s.onload = function () { resolve(window.WTA_EVENTS || {}); };
+      s.onerror = function () { resolve({}); };
+      document.head.appendChild(s);
+    });
+    return eventsPromise;
+  }
+
   var h2hMeetingsPromise = null;
   function loadH2HMeetings() {
     if (window.WTA_H2H_MATCHES) return Promise.resolve(window.WTA_H2H_MATCHES);
@@ -375,7 +393,12 @@
     $('#calTimeline').innerHTML = rows.map(function (e) {
       var prog = progressFor(e);
       var champ = e.champion ? enrich(e.champion) : null;
-      return '<div class="tl-item ' + (e.status === 'past' ? 'past' : '') + '">' +
+      var digest = (D.eventDigest || {})[e.id + '|' + e.year];
+      var clickable = digest && digest.matches ? ' clickable' : '';
+      var attrs = digest && digest.matches
+        ? ' data-event="' + e.id + '" data-year="' + e.year + '" role="button" tabindex="0"'
+        : '';
+      return '<div class="tl-item' + (e.status === 'past' ? ' past' : '') + clickable + '"' + attrs + '>' +
         '<div class="tl-date"><span class="tl-range">' + esc(shortDate(e.start)) + ' – ' + esc(shortDate(e.end) || '…') + '</span>' +
         '<span class="tl-count">' + esc(e.city || '') + '</span></div>' +
         '<div class="tl-main">' +
@@ -394,6 +417,9 @@
             : '<span class="tl-winner" style="color:var(--ivory-mute)">' +
               (e.status === 'past' ? '' : bi('待定', 'TBD')) + '</span>') +
           (prog != null ? '<span class="tl-progress"><i style="width:' + prog + '%"></i></span>' : '') +
+          (digest && digest.matches
+            ? '<span class="tl-more">' + bi(digest.matches + ' 场赛果', digest.matches + ' results') + ' →</span>'
+            : '') +
         '</div></div>';
     }).join('') || emptyState('没有符合条件的赛事', 'No events match these filters');
 
@@ -930,6 +956,114 @@
     document.body.style.overflow = 'hidden';
   }
 
+  /* ---------------------------------------------------------- 赛事赛果弹窗 */
+
+  var evState = { key: '', round: 'all' };
+
+  /**
+   * Open one event's full results: every singles match, grouped by round, with
+   * the winner highlighted.  The draw is fetched on first use.
+   */
+  function openEvent(id, year) {
+    var key = id + '|' + year;
+    var ev = D.calendar.filter(function (e) { return e.id === id && e.year === year; })[0];
+    var digest = (D.eventDigest || {})[key];
+    evState.key = key;
+    evState.round = 'all';
+
+    var title = ev ? ev.name : (digest ? '#' + id : '—');
+    $('#modalBody').innerHTML =
+      '<div class="mp-head"><div class="mp-id"><h3>' + tourNm(title) + '</h3>' +
+      '<div class="mp-meta">' +
+        (ev ? '<span>' + levelTag(ev.level) + '</span>' : '') +
+        (year ? '<span>' + year + '</span>' : '') +
+        (ev && ev.surface ? '<span>' + surfaceTag(ev.surface) + '</span>' : '') +
+        (ev && ev.city ? '<span>' + esc(ev.city) + (ev.country ? ' · ' + esc(countryZh(ev.country) || ev.country) : '') + '</span>' : '') +
+        (ev && ev.prize ? '<span>' + esc(moneyShort(ev.prize)) + '</span>' : '') +
+      '</div></div></div>' +
+      '<div id="evBody"><div class="ev-loading">' + bi('正在载入赛果…', 'Loading results…') + '</div></div>';
+
+    $('#modal').hidden = false;
+    document.body.style.overflow = 'hidden';
+
+    loadEventResults().then(function (all) {
+      var data = all[key];
+      var host = document.getElementById('evBody');
+      if (!host) return;
+      if (!data || !data.rounds.length) {
+        host.innerHTML = '<div class="h2h-empty">' + bi(
+          '官方尚未发布这项赛事的单打赛果。',
+          'The feed has no singles results for this event yet.'
+        ) + '</div>';
+        return;
+      }
+      evState.data = data;
+      paintEvent();
+    });
+  }
+
+  function paintEvent() {
+    var data = evState.data;
+    var host = document.getElementById('evBody');
+    if (!data || !host) return;
+
+    var rounds = data.rounds;
+    var total = rounds.reduce(function (n, r) { return n + r.matches.length; }, 0);
+    var hasQual = rounds.some(function (r) { return r.qualifying; });
+
+    var chips = '<button class="seg' + (evState.round === 'all' ? ' active' : '') +
+      '" data-evround="all">' + bi('全部轮次', 'All rounds') + '</button>' +
+      rounds.slice().sort(function (a, b) {
+        if (a.qualifying !== b.qualifying) return a.qualifying ? 1 : -1;
+        var order = { R128: 1, R64: 2, R32: 3, R16: 4, QF: 5, SF: 6, F: 7 };
+        return (order[b.label] || 0) - (order[a.label] || 0);
+      }).map(function (r) {
+        return '<button class="seg' + (evState.round === r.key ? ' active' : '') +
+          '" data-evround="' + r.key + '">' + roundTag(r.label) +
+          '<span class="ev-n">' + r.matches.length + '</span></button>';
+      }).join('');
+
+    var shown = evState.round === 'all' ? rounds : rounds.filter(function (r) { return r.key === evState.round; });
+
+    var body = shown.map(function (r) {
+      return '<div class="ev-round">' +
+        '<div class="ev-round-head">' + roundTag(r.label) +
+          '<span class="ev-round-n">' + bi(r.matches.length + ' 场', r.matches.length + ' matches') +
+          (r.qualifying ? ' · ' + bi('资格赛', 'qualifying') : '') + '</span></div>' +
+        r.matches.map(function (m) {
+          var aWin = m.winner === 'a';
+          return '<div class="ev-match' + (m.qualifying ? ' q' : '') + '">' +
+            '<div class="ev-side' + (aWin ? ' win' : '') + '">' +
+              (m.a.seed ? '<span class="ev-seed">' + m.a.seed + '</span>' : '') +
+              '<span class="ev-nm">' + playerNm(m.a) + '</span>' +
+              '<span class="flag">' + esc(m.a.country || '') + '</span></div>' +
+            '<div class="ev-score">' + esc(m.score || m.note || '—') +
+              (m.note ? '<span class="ev-note">' + esc(m.note) + '</span>' : '') + '</div>' +
+            '<div class="ev-side b' + (aWin ? '' : ' win') + '">' +
+              (m.b.seed ? '<span class="ev-seed">' + m.b.seed + '</span>' : '') +
+              '<span class="ev-nm">' + playerNm(m.b) + '</span>' +
+              '<span class="flag">' + esc(m.b.country || '') + '</span></div>' +
+            '</div>';
+        }).join('') + '</div>';
+    }).join('');
+
+    host.innerHTML =
+      '<div class="ev-summary">' +
+        '<span>' + bi(total + ' 场单打', total + ' singles matches') + '</span>' +
+        '<span>' + bi(rounds.length + ' 个轮次', rounds.length + ' rounds') + '</span>' +
+        (hasQual ? '<span>' + bi('含资格赛', 'qualifying included') + '</span>' : '') +
+      '</div>' +
+      '<div class="ev-rounds seg-group">' + chips + '</div>' +
+      '<div class="ev-list">' + body + '</div>';
+
+    host.querySelector('.ev-rounds').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-evround]');
+      if (!b) return;
+      evState.round = b.dataset.evround;
+      paintEvent();
+    });
+  }
+
   function mpTile(v, cn, en) {
     return '<div class="mp-tile"><b>' + esc(v) + '</b><span>' + bi(cn, en) + '</span></div>';
   }
@@ -994,6 +1128,22 @@
       switchTab(a.getAttribute('href').slice(1));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
+    // 赛程行 → 赛事赛果弹窗
+    document.addEventListener('click', function (e) {
+      var row = e.target.closest('[data-event]');
+      if (!row) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openEvent(Number(row.dataset.event), Number(row.dataset.year));
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var row = e.target.closest && e.target.closest('[data-event]');
+      if (!row) return;
+      e.preventDefault();
+      openEvent(Number(row.dataset.event), Number(row.dataset.year));
+    });
+
     // 打开弹窗（球员卡 / 表格行 / 冠军墙共用）
     document.addEventListener('click', function (e) {
       var t = e.target.closest('[data-player]');

@@ -31,7 +31,7 @@ console.log('  ✓ site-v2/ → docs/');
 
 // 2. Generated data (dashboard.js + h2h.js are the only files the page loads)
 await mkdir(resolve(OUT, 'data'), { recursive: true });
-const wanted = ['dashboard.js', 'h2h.js', 'h2h-matches.js'];
+const wanted = ['dashboard.js', 'events.js', 'h2h.js', 'h2h-matches.js'];
 for (const f of wanted) {
   if (!existsSync(resolve(DATA_DIR, f))) {
     console.error(`✗ data/${f} is missing — run scripts/generate-data.mjs first`);
