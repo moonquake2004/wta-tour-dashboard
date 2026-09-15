@@ -9,12 +9,10 @@
  * Match-by-match results are fetched separately for the tour's headline players
  * so the repository stays a reasonable size; see fetch-matches.mjs.
  */
-import { readFile, mkdir } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import {
   ROOT,
-  DATA_DIR,
-  apiGet,
   writeJson,
   log,
   fetchPlayerDetailed,
@@ -36,9 +34,6 @@ let targets = rankings.players.slice(0, LIMIT);
 if (ONLY) targets = targets.filter((p) => ONLY.has(p.id));
 
 log('players', `Fetching official records for ${targets.length} players (season ${SEASON})…`);
-
-const PLAYER_DIR = resolve(DATA_DIR, 'players');
-await mkdir(PLAYER_DIR, { recursive: true });
 
 const bios = {};
 const seasons = {};
