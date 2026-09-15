@@ -1,30 +1,18 @@
 {
   "name": "wta-tour-dashboard",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "An independent, open-source data dashboard for the Hologic WTA Tour, built from the official WTA public data feed.",
-  "keywords": [
-    "wta",
-    "tennis",
-    "dashboard",
-    "rankings",
-    "sports-data",
-    "static-site"
-  ],
+  "description": "An independent data dashboard for the Hologic WTA Tour, built with the Python standard library from the official WTA public data feed.",
+  "keywords": ["wta", "tennis", "dashboard", "rankings", "sports-data", "static-site", "python"],
   "license": "MIT",
-  "type": "module",
-  "engines": {
-    "node": ">=20"
-  },
+  "engines": { "python": ">=3.11" },
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "build:light": "node scripts/build.mjs --skip-players --skip-matches",
-    "refresh": "node scripts/refresh-rankings.mjs",
-    "data": "node scripts/generate-data.mjs",
-    "site": "node scripts/build-site.mjs",
-    "serve": "node scripts/serve.mjs",
-    "verify": "node scripts/verify.mjs && node scripts/verify-dashboard.mjs",
-    "publish": "node scripts/generate-data.mjs && node scripts/build-site.mjs && node scripts/verify-dashboard.mjs",
-    "data:events": "node scripts/fetch-events.mjs"
+    "build": "python3 pyscripts/build.py",
+    "refresh": "python3 pyscripts/refresh_rankings.py",
+    "data": "python3 pyscripts/generate_data.py",
+    "site": "python3 pyscripts/build_site.py",
+    "serve": "python3 pyscripts/serve.py",
+    "verify": "python3 pyscripts/verify.py && python3 pyscripts/verify_dashboard.py",
+    "publish": "python3 pyscripts/generate_data.py && python3 pyscripts/build_site.py && python3 pyscripts/verify_dashboard.py"
   }
 }

@@ -1,11 +1,11 @@
 # macOS
 .DS_Store
 
-# Node
-node_modules/
-npm-debug.log*
-pnpm-debug.log*
-.npm/
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
 
 # Editors
 .vscode/
@@ -13,7 +13,7 @@ pnpm-debug.log*
 *.swp
 *~
 
-# Chinese variant-conversion cache (regenerated on demand)
+# Build-only artefacts (regenerated on demand)
 data/zh-variant-cache.json
 
 # Local scratch
@@ -21,6 +21,5 @@ tmp/
 .cache/
 *.log
 
-# Local preview artefacts (docs/ is generated but IS committed, because
-# GitHub Pages serves the site from it)
+# docs/ is generated but IS committed, because GitHub Pages serves it.
 !docs/

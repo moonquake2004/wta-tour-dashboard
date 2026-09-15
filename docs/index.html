@@ -1,369 +1,133 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-lang="both">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>2026 女子网球巡回赛 · 数据看板 | WTA Tour Data Dashboard</title>
-<meta name="description" content="WTA 官方数据看板：单打世界排名、赛季赛程与赛果、球员数据、发球接发统计、历史交手记录。中英双语，纯静态，自动追更。">
-<meta name="theme-color" content="#08131f">
+<title>2026 女子网球巡回赛 · 数据看板 | 女子网球巡回赛数据看板</title>
+<meta name="description" content="2026 赛季女子网球巡回赛数据看板：官方单打世界排名、赛程赛果、球员数据与历史交手记录。Official WTA rankings, calendar, results, player records and head-to-heads.">
+<meta name="theme-color" content="#0f4832">
 <meta name="color-scheme" content="dark">
 <meta name="author" content="WTA Tour Dashboard contributors">
 <meta name="robots" content="index, follow">
-
 <meta property="og:type" content="website">
-<meta property="og:title" content="2026 女子网球巡回赛 · 数据看板">
-<meta property="og:description" content="WTA 官方排名、赛程赛果、球员数据与交手记录。中英双语，纯静态站点。">
+<meta property="og:title" content="2026 女子网球巡回赛 · 数据看板 | 女子网球巡回赛数据看板">
+<meta property="og:description" content="2026 赛季女子网球巡回赛数据看板：官方单打世界排名、赛程赛果、球员数据与历史交手记录。Official WTA rankings, calendar, results, player records and head-to-heads.">
 <meta property="og:image" content="assets/og-cover.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="WTA Tour Data Dashboard">
-<meta name="twitter:description" content="Official WTA rankings, season calendar, results, player data and head-to-head records. Bilingual static site.">
-<meta name="twitter:image" content="assets/og-cover.png">
-
-<link rel="canonical" href="https://moonquake2004.github.io/wta-tour-dashboard/">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%230b2a1e'/%3E%3Ccircle cx='32' cy='32' r='19' fill='%23d8e63c'/%3E%3Cpath d='M14 26 Q32 33 50 26' stroke='%23fff' stroke-width='3.2' fill='none' opacity='.92'/%3E%3Cpath d='M14 38 Q32 31 50 38' stroke='%23fff' stroke-width='3.2' fill='none' opacity='.92'/%3E%3C/svg%3E">
-
+<link rel="canonical" href="https://moonquake2004.github.io/wta-tour-dashboard/index.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%230b2a1e'/%3E%3Ccircle cx='32' cy='32' r='19' fill='%23d8e63c'/%3E%3Cpath d='M14 26 Q32 33 50 26' stroke='%23fff' stroke-width='3.2' fill='none'/%3E%3Cpath d='M14 38 Q32 31 50 38' stroke='%23fff' stroke-width='3.2' fill='none'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/style.css?v=20260915052220">
+<link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════════════════════════ 页头 -->
+<!-- 语言锚点：正文是它们的兄弟节点，因此 :target 可以控制 .cn/.en 的显隐 -->
+<div id="lang-both" class="lang-anchor"></div>
+<div id="lang-cn" class="lang-anchor"></div>
+<div id="lang-en" class="lang-anchor"></div>
+
+<div class="lang-ctx">
 <header class="site-header">
   <div class="header-inner">
-    <a class="brand" href="#overview">
+    <a class="brand" href="index.html">
       <span class="brand-ball" aria-hidden="true"></span>
       <span class="brand-text">
         <strong class="brand-cn">女子网球巡回赛 · 数据看板</strong>
         <span class="brand-en">WTA TOUR · DATA DASHBOARD</span>
       </span>
     </a>
-
     <div class="season-chip">
       <span class="season-label"><i class="cn">赛季</i><i class="en">SEASON</i></span>
-      <span class="season-value" id="seasonValue">—</span>
+      <span class="season-value">2026</span>
     </div>
-
-    <div class="lang-switch" id="langSwitch" title="显示语言 / Display language">
-      <button class="lang-btn" data-l="both"><span class="cn">双语</span><span class="en">BOTH</span></button>
-      <button class="lang-btn" data-l="cn"><span class="cn">中文</span><span class="en">CN</span></button>
-      <button class="lang-btn" data-l="en"><span class="cn">英文</span><span class="en">EN</span></button>
+    <div class="lang-switch">
+      <a class="lang-btn" data-l="both" href="#lang-both"><span class="cn">双语</span><span class="en">BOTH</span></a>
+      <a class="lang-btn" data-l="cn" href="#lang-cn"><span class="cn">中文</span><span class="en">CN</span></a>
+      <a class="lang-btn" data-l="en" href="#lang-en"><span class="cn">英文</span><span class="en">EN</span></a>
     </div>
-
-    <button class="nav-toggle" id="navToggle" aria-label="切换导航 / Toggle navigation" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
   </div>
-
-  <nav class="main-nav" id="mainNav">
-    <a class="nav-link" data-tab="overview" href="#overview"><span class="cn">总览</span><span class="en">Overview</span></a>
-    <a class="nav-link" data-tab="schedule" href="#schedule"><span class="cn">赛程</span><span class="en">Calendar</span></a>
-    <a class="nav-link" data-tab="results" href="#results"><span class="cn">赛果</span><span class="en">Results</span></a>
-    <a class="nav-link" data-tab="rankings" href="#rankings"><span class="cn">排名</span><span class="en">Rankings</span></a>
-    <a class="nav-link" data-tab="players" href="#players"><span class="cn">球员</span><span class="en">Players</span></a>
-    <a class="nav-link" data-tab="stats" href="#stats"><span class="cn">数据</span><span class="en">Statistics</span></a>
-    <a class="nav-link" data-tab="h2h" href="#h2h"><span class="cn">交手</span><span class="en">Head-to-Head</span></a>
-  </nav>
+  <nav class="main-nav"><a class="nav-link active" href="index.html"><span class="cn">总览</span><span class="en">Overview</span></a><a class="nav-link" href="calendar.html"><span class="cn">赛程</span><span class="en">Calendar</span></a><a class="nav-link" href="results.html"><span class="cn">赛果</span><span class="en">Results</span></a><a class="nav-link" href="rankings.html"><span class="cn">排名</span><span class="en">Rankings</span></a><a class="nav-link" href="players.html"><span class="cn">球员</span><span class="en">Players</span></a><a class="nav-link" href="stats.html"><span class="cn">数据</span><span class="en">Statistics</span></a><a class="nav-link" href="h2h.html"><span class="cn">交手</span><span class="en">Head-to-head</span></a></nav>
 </header>
 
-<div id="loader" class="loader">
-  <div class="loader-ball"></div>
-  <p><span class="cn">正在载入官方数据…</span><span class="en">Loading official data…</span></p>
+<main>
+
+<section class="hero">
+  <div class="hero-court" aria-hidden="true"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow"><span class="dot-live"></span>
+      <span class="cn">官方数据源</span><span class="en">OFFICIAL DATA FEED</span></div>
+    <h1 class="hero-title">
+      <span class="cn">2026 赛季</span>
+      <span class="en">2026 SEASON</span>
+    </h1>
+    <p class="hero-sub"><span><span class="cn">数据来源：WTA 官方公开数据接口 · 涵盖单打世界排名、赛季赛程与赛果、球员档案、发球接发统计与历史交手记录</span><span class="en">Sourced from the WTA public data API — singles rankings, calendar and results, player records, serve and return statistics, and career head-to-heads</span></span></p>
+    <div class="hero-meta">
+      <span><i class="cn">更新日期</i><i class="en">Updated</i><b>15 Sep 2026</b></span>
+      <span><i class="cn">排名周</i><i class="en">Rankings week</i><b>14 Sep 2026</b></span>
+      <span><i class="cn">收录球员</i><i class="en">Players</i><b>300</b></span>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <h2 class="sec-title"><span class="cn">赛季概览</span><span class="en">Season At A Glance</span></h2>
+  <div class="kpi-grid"><div class="kpi" style="--kpi-accent:var(--gold-500)"><div class="kpi-label"><span><span class="cn">排名球员</span><span class="en">Ranked players</span></span></div><div class="kpi-value">300</div><div class="kpi-sub"><span><span class="cn">单打世界排名收录</span><span class="en">singles ranking depth</span></span></div></div><div class="kpi" style="--kpi-accent:var(--grass-400)"><div class="kpi-label"><span><span class="cn">赛季赛事</span><span class="en">Season events</span></span></div><div class="kpi-value">121</div><div class="kpi-sub"><span><span class="cn">83 项已结束</span><span class="en">83 completed</span></span></div></div><div class="kpi" style="--kpi-accent:var(--line-white)"><div class="kpi-label"><span><span class="cn">赛季比赛</span><span class="en">Season matches</span></span></div><div class="kpi-value">8,579</div><div class="kpi-sub"><span><span class="cn">已收录赛果</span><span class="en">results captured</span></span></div></div><div class="kpi" style="--kpi-accent:var(--gold-500)"><div class="kpi-label"><span><span class="cn">产生冠军</span><span class="en">Titles won</span></span></div><div class="kpi-value">82</div><div class="kpi-sub"><span><span class="cn">本赛季单打冠军</span><span class="en">singles champions</span></span></div></div><div class="kpi" style="--kpi-accent:var(--gold-400)"><div class="kpi-label"><span><span class="cn">世界第一</span><span class="en">World No.1</span></span></div><div class="kpi-value">叶连娜·莱巴金娜</div><div class="kpi-sub"><span><span class="cn">9,901 积分</span><span class="en">9,901 pts</span></span></div></div><div class="kpi" style="--kpi-accent:var(--grass-500)"><div class="kpi-label"><span><span class="cn">下周开赛</span><span class="en">Upcoming</span></span></div><div class="kpi-value">38</div><div class="kpi-sub"><span><span class="cn">未开始的赛事</span><span class="en">events not yet played</span></span></div></div></div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head"><h3><span><span class="cn">冠军墙</span><span class="en">Champions</span></span></h3>
+        <span class="panel-note"><span><span class="cn">40 项赛事</span><span class="en">40 events</span></span></span></div>
+      <div class="champion-wall"><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">ER</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/324166.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">叶连娜·莱巴金娜</span><span class="en">Elena Rybakina</span></span></div></div><div class="champ-ev"><span><span class="cn">美国网球公开赛</span><span class="en">Us Open</span></span></div><div class="champ-ev">13 Sep · <span class="tag-lvl gs"><span><span class="cn">大满贯</span><span class="en">SLAM</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">FF</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/319969.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">菲奥娜·菲萝</span><span class="en">Fiona Ferro</span></span></div></div><div class="champ-ev"><span><span class="cn">蒙特勒公开赛</span><span class="en">Montreux 125</span></span></div><div class="champ-ev">13 Sep · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">RD</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/332748.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">罗西察·登切娃</span><span class="en">Rositsa Dencheva</span></span></div></div><div class="champ-ev"><span><span class="cn">安塔利亚公开赛</span><span class="en">Antalya 125 (atik)</span></span></div><div class="champ-ev">13 Sep · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">CL</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/323966.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">刘婧文</span><span class="en">Claire Liu</span></span></div></div><div class="champ-ev"><span><span class="cn">巴兰基亚公开赛</span><span class="en">Barranquilla 125</span></span></div><div class="champ-ev">13 Sep · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">DP</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/327077.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">戴安娜·帕里</span><span class="en">Diane Parry</span></span></div></div><div class="champ-ev"><span><span class="cn">蒙特雷公开赛</span><span class="en">Monterrey</span></span></div><div class="champ-ev">29 Aug · <span class="tag-lvl w500"><span><span class="cn">WTA 500 赛</span><span class="en">WTA 500</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">KV</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/327391.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">凯蒂·沃利内茨</span><span class="en">Katie Volynets</span></span></div></div><div class="champ-ev"><span><span class="cn">费城公开赛</span><span class="en">Philadelphia 125</span></span></div><div class="champ-ev">29 Aug · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">CG</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/328560.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">科科·高夫</span><span class="en">Coco Gauff</span></span></div></div><div class="champ-ev"><span><span class="cn">辛辛那提公开赛</span><span class="en">Cincinnati</span></span></div><div class="champ-ev">23 Aug · <span class="tag-lvl w1000"><span><span class="cn">WTA 1000 赛</span><span class="en">WTA 1000</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">IS</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/326408.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">伊加·斯维亚特克</span><span class="en">Iga Swiatek</span></span></div></div><div class="champ-ev"><span><span class="cn">加拿大公开赛（蒙特利尔）</span><span class="en">Montreal</span></span></div><div class="champ-ev">13 Aug · <span class="tag-lvl w1000"><span><span class="cn">WTA 1000 赛</span><span class="en">WTA 1000</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">CY</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/329383.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">卡罗尔·英洙·李</span><span class="en">Carol Young Suh Lee</span></span></div></div><div class="champ-ev"><span><span class="cn">华沙公开赛</span><span class="en">Warsaw 125</span></span></div><div class="champ-ev">8 Aug · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">AE</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/330332.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">亚历克斯·艾拉</span><span class="en">Alexandra Eala</span></span></div></div><div class="champ-ev"><span><span class="cn">华盛顿公开赛</span><span class="en">Washington Dc</span></span></div><div class="champ-ev">2 Aug · <span class="tag-lvl w500"><span><span class="cn">WTA 500 赛</span><span class="en">WTA 500</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">LS</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/333944.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">劳拉·萨姆索诺娃</span><span class="en">Laura Samson</span></span></div></div><div class="champ-ev"><span><span class="cn">特尔古穆列什公开赛</span><span class="en">Targu Mures 125</span></span></div><div class="champ-ev">2 Aug · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">KL</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/335303.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">克里斯季娜·柳托娃</span><span class="en">Kristina Liutova</span></span></div></div><div class="champ-ev"><span><span class="cn">孟菲斯公开赛</span><span class="en">Memphis</span></span></div><div class="champ-ev">2 Aug · <span class="tag-lvl w250"><span><span class="cn">WTA 250 赛</span><span class="en">WTA 250</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">TP</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/330291.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">泰拉·普雷斯顿</span><span class="en">Taylah Preston</span></span></div></div><div class="champ-ev"><span><span class="cn">温哥华公开赛</span><span class="en">Vancouver 125</span></span></div><div class="champ-ev">1 Aug · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">LT</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/332150.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">莉莉·塔格尔</span><span class="en">Lilli Tagger</span></span></div></div><div class="champ-ev"><span><span class="cn">布拉格公开赛</span><span class="en">Prague</span></span></div><div class="champ-ev">26 Jul · <span class="tag-lvl w250"><span><span class="cn">WTA 250 赛</span><span class="en">WTA 250</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">FJ</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/324479.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">弗朗西斯卡·琼斯</span><span class="en">Francesca Jones</span></span></div></div><div class="champ-ev"><span><span class="cn">巴勒莫公开赛</span><span class="en">Palermo 125</span></span></div><div class="champ-ev">26 Jul · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">TK</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/319571.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">塔玛拉·科尔帕奇</span><span class="en">Tamara Korpatsch</span></span></div></div><div class="champ-ev"><span><span class="cn">汉堡公开赛</span><span class="en">Hamburg</span></span></div><div class="champ-ev">26 Jul · <span class="tag-lvl w250"><span><span class="cn">WTA 250 赛</span><span class="en">WTA 250</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">FJ</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/324479.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">弗朗西斯卡·琼斯</span><span class="en">Francesca Jones</span></span></div></div><div class="champ-ev"><span><span class="cn">罗马公开赛</span><span class="en">Rome 125</span></span></div><div class="champ-ev">19 Jul · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">SK</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/327061.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">辛雅·克劳斯</span><span class="en">Sinja Kraus</span></span></div></div><div class="champ-ev"><span><span class="cn">基茨比厄尔公开赛</span><span class="en">Kitzbhuel 125</span></span></div><div class="champ-ev">19 Jul · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">LT</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/329651.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">兰拉娜·塔拉路堤</span><span class="en">Lanlana Tararudee</span></span></div></div><div class="champ-ev"><span><span class="cn">伊斯坦布尔公开赛</span><span class="en">Istanbul 125 #2</span></span></div><div class="champ-ev">19 Jul · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">BK</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/318314.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">巴尔博拉·克赖奇科娃</span><span class="en">Barbora Krejcikova</span></span></div></div><div class="champ-ev"><span><span class="cn">雅典公开赛</span><span class="en">Athens</span></span></div><div class="champ-ev">19 Jul · <span class="tag-lvl w250"><span><span class="cn">WTA 250 赛</span><span class="en">WTA 250</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">MS</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/318711.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">玛雅·谢里夫</span><span class="en">Mayar Sherif</span></span></div></div><div class="champ-ev"><span><span class="cn">雅西公开赛</span><span class="en">Iasi</span></span></div><div class="champ-ev">19 Jul · <span class="tag-lvl w250"><span><span class="cn">WTA 250 赛</span><span class="en">WTA 250</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">LN</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/329668.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">琳达·诺斯科娃</span><span class="en">Linda Noskova</span></span></div></div><div class="champ-ev"><span><span class="cn">温布尔登网球锦标赛</span><span class="en">Wimbledon</span></span></div><div class="champ-ev">12 Jul · <span class="tag-lvl gs"><span><span class="cn">大满贯</span><span class="en">SLAM</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">TM</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/310440.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">塔季扬娜·玛丽亚</span><span class="en">Tatjana Maria</span></span></div></div><div class="champ-ev"><span><span class="cn">纽波特公开赛</span><span class="en">Newport 125</span></span></div><div class="champ-ev">12 Jul · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">MS</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/318711.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">玛雅·谢里夫</span><span class="en">Mayar Sherif</span></span></div></div><div class="champ-ev"><span><span class="cn">孔特雷克塞维尔公开赛</span><span class="en">Contrexeville 125</span></span></div><div class="champ-ev">12 Jul · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">PB</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/320124.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">宝拉·巴多萨</span><span class="en">Paula Badosa</span></span></div></div><div class="champ-ev"><span><span class="cn">博斯塔德公开赛</span><span class="en">Bastad 125</span></span></div><div class="champ-ev">11 Jul · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">KM</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/322191.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">卡罗利娜·穆霍娃</span><span class="en">Karolina Muchova</span></span></div></div><div class="champ-ev"><span><span class="cn">巴德洪堡公开赛</span><span class="en">Bad Homburg</span></span></div><div class="champ-ev">27 Jun · <span class="tag-lvl w500"><span><span class="cn">WTA 500 赛</span><span class="en">WTA 500</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">MK</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/316959.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">麦迪逊·凯斯</span><span class="en">Madison Keys</span></span></div></div><div class="champ-ev"><span><span class="cn">伊斯特本国际赛</span><span class="en">Eastbourne</span></span></div><div class="champ-ev">27 Jun · <span class="tag-lvl w250"><span><span class="cn">WTA 250 赛</span><span class="en">WTA 250</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">MB</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/320983.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">玛丽·鲍兹科娃</span><span class="en">Marie Bouzkova</span></span></div></div><div class="champ-ev"><span><span class="cn">诺丁汉公开赛</span><span class="en">Nottingham</span></span></div><div class="champ-ev">21 Jun · <span class="tag-lvl w250"><span><span class="cn">WTA 250 赛</span><span class="en">WTA 250</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">MS</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/318711.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">玛雅·谢里夫</span><span class="en">Mayar Sherif</span></span></div></div><div class="champ-ev"><span><span class="cn">布雷西亚公开赛</span><span class="en">Brescia 125</span></span></div><div class="champ-ev">21 Jun · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">DV</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/329057.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">达尔娅·维德曼诺娃</span><span class="en">Darja Vidmanova</span></span></div></div><div class="champ-ev"><span><span class="cn">菲盖拉达福什公开赛</span><span class="en">Figueira Da Foz 125</span></span></div><div class="champ-ev">21 Jun · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">LN</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/329668.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">琳达·诺斯科娃</span><span class="en">Linda Noskova</span></span></div></div><div class="champ-ev"><span><span class="cn">柏林公开赛</span><span class="en">Berlin</span></span></div><div class="champ-ev">21 Jun · <span class="tag-lvl w500"><span><span class="cn">WTA 500 赛</span><span class="en">WTA 500</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">RM</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/329408.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">罗宾·蒙哥马利</span><span class="en">Robin Montgomery</span></span></div></div><div class="champ-ev"><span><span class="cn">斯海尔托亨博斯公开赛</span><span class="en">&#x27;s-hertogenbosch</span></span></div><div class="champ-ev">14 Jun · <span class="tag-lvl w250"><span><span class="cn">WTA 250 赛</span><span class="en">WTA 250</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">DV</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/318516.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">唐娜·维基克</span><span class="en">Donna Vekic</span></span></div></div><div class="champ-ev"><span><span class="cn">女王俱乐部锦标赛</span><span class="en">Queens</span></span></div><div class="champ-ev">14 Jun · <span class="tag-lvl w500"><span><span class="cn">WTA 500 赛</span><span class="en">WTA 500</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">AK</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/329409.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">阿什林·克鲁格</span><span class="en">Ashlyn Krueger</span></span></div></div><div class="champ-ev"><span><span class="cn">伊尔克利公开赛</span><span class="en">Ilkley 125</span></span></div><div class="champ-ev">14 Jun · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">KK</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/315806.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">卡塔芝娜·卡瓦</span><span class="en">Katarzyna Kawa</span></span></div></div><div class="champ-ev"><span><span class="cn">摩德纳公开赛</span><span class="en">Modena 125</span></span></div><div class="champ-ev">14 Jun · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">MA</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/331809.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">米拉·安德烈耶娃</span><span class="en">Mirra Andreeva</span></span></div></div><div class="champ-ev"><span><span class="cn">法国网球公开赛</span><span class="en">Roland Garros</span></span></div><div class="champ-ev">7 Jun · <span class="tag-lvl gs"><span><span class="cn">大满贯</span><span class="en">SLAM</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">AE</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/330332.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">亚历克斯·艾拉</span><span class="en">Alexandra Eala</span></span></div></div><div class="champ-ev"><span><span class="cn">伯明翰精英赛</span><span class="en">Birmingham 125</span></span></div><div class="champ-ev">7 Jun · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">LR</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/326891.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">莱尔·罗梅罗·戈尔马斯</span><span class="en">Leyre Romero Gormaz</span></span></div></div><div class="champ-ev"><span><span class="cn">巴里公开赛</span><span class="en">Bari 125</span></span></div><div class="champ-ev">7 Jun · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">MT</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/328896.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">玛丽亚·蒂莫菲耶娃</span><span class="en">Maria Timofeeva</span></span></div></div><div class="champ-ev"><span><span class="cn">马卡尔斯卡公开赛</span><span class="en">Makarska 125</span></span></div><div class="champ-ev">7 Jun · <span class="tag-lvl w250"><span><span class="cn">WTA 125 赛</span><span class="en">WTA 125</span></span></span></div></div><div class="champ-card"><div class="champ-top"><span class="av" style="--av:32px"><span class="av-mono" aria-hidden="true">EN</span><img class="champ-avatar" src="https://wtafiles.blob.core.windows.net/images/headshots/325410.jpg" alt="" loading="lazy" width="32" height="32"></span><div class="champ-name"><span class="cup" aria-hidden="true">🏆</span><span><span class="cn">艾玛·纳瓦罗</span><span class="en">Emma Navarro</span></span></div></div><div class="champ-ev"><span><span class="cn">斯特拉斯堡国际赛</span><span class="en">Strasbourg</span></span></div><div class="champ-ev">23 May · <span class="tag-lvl w500"><span><span class="cn">WTA 500 赛</span><span class="en">WTA 500</span></span></span></div></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3><span><span class="cn">最新赛果</span><span class="en">Latest Results</span></span></h3>
+        <span class="panel-note"><span><span class="cn">最近 12 场</span><span class="en">latest 12</span></span></span></div>
+      <div class="recent-list"><div class="rr"><div class="rr-date">7 Sep<br>2026</div><div class="rr-main"><div class="rr-players"><span class="rr-w"><span><span class="cn">埃娃·本内曼</span><span class="en">Eva Bennemann</span></span></span><span class="d">d.</span><span class="rr-l"><span><span class="cn">帢拉·布尤卡柴</span><span class="en">Cagla Buyukakcay</span></span></span></div><div class="rr-ev"><span><span class="cn">16 强</span><span class="en">R16</span></span><span>·</span><span><span class="cn">安塔利亚公开赛</span><span class="en">Antalya 125 (atik)</span></span><span class="sfc Clay"><i></i><span><span class="cn">红土</span><span class="en">Clay</span></span></span></div></div><div class="rr-score">6-4 6-4</div></div><div class="rr"><div class="rr-date">7 Sep<br>2026</div><div class="rr-main"><div class="rr-players"><span class="rr-w"><span><span class="cn">米卡·斯托伊萨夫列维奇</span><span class="en">Mika Stojsavljevic</span></span></span><span class="d">d.</span><span class="rr-l"><span><span class="cn">朱迪·布雷奇</span><span class="en">Jodie Burrage</span></span></span></div><div class="rr-ev"><span><span class="cn">32 强</span><span class="en">R32</span></span><span>·</span><span><span class="cn">埃武拉公开赛</span><span class="en">Evora</span></span><span class="sfc Hard"><i></i><span><span class="cn">硬地</span><span class="en">Hard</span></span></span></div></div><div class="rr-score">6-3 6-0</div></div><div class="rr"><div class="rr-date">7 Sep<br>2026</div><div class="rr-main"><div class="rr-players"><span class="rr-w"><span><span class="cn">任宇飞</span><span class="en">Yufei Ren</span></span></span><span class="d">d.</span><span class="rr-l"><span>Yuhan Wang</span></span></div><div class="rr-ev"><span><span class="cn">16 强</span><span class="en">R16</span></span><span>·</span><span><span class="cn">桂阳街道</span><span class="en">Guiyang</span></span><span class="sfc Hard"><i></i><span><span class="cn">硬地</span><span class="en">Hard</span></span></span></div></div><div class="rr-score">6-4 6-4</div></div><div class="rr"><div class="rr-date">7 Sep<br>2026</div><div class="rr-main"><div class="rr-players"><span class="rr-w"><span><span class="cn">任宇飞</span><span class="en">Yufei Ren</span></span></span><span class="d">d.</span><span class="rr-l"><span><span class="cn">井上阳菜</span><span class="en">Hina Inoue</span></span></span></div><div class="rr-ev"><span><span class="cn">四分之一决赛</span><span class="en">Q</span></span><span>·</span><span><span class="cn">桂阳街道</span><span class="en">Guiyang</span></span><span class="sfc Hard"><i></i><span><span class="cn">硬地</span><span class="en">Hard</span></span></span></div></div><div class="rr-score">4-6 6-1 6-4</div></div><div class="rr"><div class="rr-date">7 Sep<br>2026</div><div class="rr-main"><div class="rr-players"><span class="rr-w"><span><span class="cn">拉达·佐洛塔廖娃</span><span class="en">Rada Zolotareva</span></span></span><span class="d">d.</span><span class="rr-l"><span>Aneta Laboutkova</span></span></div><div class="rr-ev"><span><span class="cn">16 强</span><span class="en">R16</span></span><span>·</span><span><span class="cn">安塔利亚公开赛</span><span class="en">Antalya 125 (atik)</span></span><span class="sfc Clay"><i></i><span><span class="cn">红土</span><span class="en">Clay</span></span></span></div></div><div class="rr-score">7-6(2) 6-4</div></div><div class="rr"><div class="rr-date">7 Sep<br>2026</div><div class="rr-main"><div class="rr-players"><span class="rr-w"><span><span class="cn">伊佩克·奥兹</span><span class="en">Ipek Oz</span></span></span><span class="d">d.</span><span class="rr-l"><span><span class="cn">拉达·佐洛塔廖娃</span><span class="en">Rada Zolotareva</span></span></span></div><div class="rr-ev"><span><span class="cn">四分之一决赛</span><span class="en">Q</span></span><span>·</span><span><span class="cn">安塔利亚公开赛</span><span class="en">Antalya 125 (atik)</span></span><span class="sfc Clay"><i></i><span><span class="cn">红土</span><span class="en">Clay</span></span></span></div></div><div class="rr-score">6-7(5) 6-4 6-4</div></div><div class="rr"><div class="rr-date">7 Sep<br>2026</div><div class="rr-main"><div class="rr-players"><span class="rr-w"><span><span class="cn">罗西察·登切娃</span><span class="en">Rositsa Dencheva</span></span></span><span class="d">d.</span><span class="rr-l"><span><span class="cn">伊佩克·奥兹</span><span class="en">Ipek Oz</span></span></span></div><div class="rr-ev"><span><span class="cn">32 强</span><span class="en">R32</span></span><span>·</span><span><span class="cn">安塔利亚公开赛</span><span class="en">Antalya 125 (atik)</span></span><span class="sfc Clay"><i></i><span><span class="cn">红土</span><span class="en">Clay</span></span></span></div></div><div class="rr-score">4-6 7-5 6-0</div></div><div class="rr"><div class="rr-date">7 Sep<br>2026</div><div class="rr-main"><div class="rr-players"><span class="rr-w"><span><span class="cn">罗西察·登切娃</span><span class="en">Rositsa Dencheva</span></span></span><span class="d">d.</span><span class="rr-l"><span>Adelina Lacinova</span></span></div><div class="rr-ev"><span><span class="cn">16 强</span><span class="en">R16</span></span><span>·</span><span><span class="cn">安塔利亚公开赛</span><span class="en">Antalya 125 (atik)</span></span><span class="sfc Clay"><i></i><span><span class="cn">红土</span><span class="en">Clay</span></span></span></div></div><div class="rr-score">6-4 6-0</div></div><div class="rr"><div class="rr-date">7 Sep<br>2026</div><div class="rr-main"><div class="rr-players"><span class="rr-w"><span><span class="cn">罗西察·登切娃</span><span class="en">Rositsa Dencheva</span></span></span><span class="d">d.</span><span class="rr-l"><span><span class="cn">米里亚娜·托纳</span><span class="en">Miriana Tona</span></span></span></div><div class="rr-ev"><span><span class="cn">四分之一决赛</span><span class="en">Q</span></span><span>·</span><span><span class="cn">安塔利亚公开赛</span><span class="en">Antalya 125 (atik)</span></span><span class="sfc Clay"><i></i><span><span class="cn">红土</span><span class="en">Clay</span></span></span></div></div><div class="rr-score">6-1 6-4</div></div><div class="rr"><div class="rr-date">7 Sep<br>2026</div><div class="rr-main"><div class="rr-players"><span class="rr-w"><span><span class="cn">叶利扎拉·亚涅娃</span><span class="en">Elizara Yaneva</span></span></span><span class="d">d.</span><span class="rr-l"><span><span class="cn">维罗妮卡·法尔科夫斯卡</span><span class="en">Weronika Falkowska</span></span></span></div><div class="rr-ev"><span><span class="cn">32 强</span><span class="en">R32</span></span><span>·</span><span><span class="cn">安塔利亚公开赛</span><span class="en">Antalya 125 (atik)</span></span><span class="sfc Clay"><i></i><span><span class="cn">红土</span><span class="en">Clay</span></span></span></div></div><div class="rr-score">6-1 1-6 7-6(4)</div></div><div class="rr"><div class="rr-date">7 Sep<br>2026</div><div class="rr-main"><div class="rr-players"><span class="rr-w"><span><span class="cn">叶利扎拉·亚涅娃</span><span class="en">Elizara Yaneva</span></span></span><span class="d">d.</span><span class="rr-l"><span><span class="cn">日贝克·库拉姆巴耶娃</span><span class="en">Zhibek Kulambayeva</span></span></span></div><div class="rr-ev"><span><span class="cn">16 强</span><span class="en">R16</span></span><span>·</span><span><span class="cn">安塔利亚公开赛</span><span class="en">Antalya 125 (atik)</span></span><span class="sfc Clay"><i></i><span><span class="cn">红土</span><span class="en">Clay</span></span></span></div></div><div class="rr-score">6-3 3-6 6-4</div></div><div class="rr"><div class="rr-date">7 Sep<br>2026</div><div class="rr-main"><div class="rr-players"><span class="rr-w"><span><span class="cn">罗西察·登切娃</span><span class="en">Rositsa Dencheva</span></span></span><span class="d">d.</span><span class="rr-l"><span><span class="cn">阿列夫京娜·易卜拉欣莫娃</span><span class="en">Alevtina Ibragimova</span></span></span></div><div class="rr-ev"><span><span class="cn">决赛</span><span class="en">F</span></span><span>·</span><span><span class="cn">安塔利亚公开赛</span><span class="en">Antalya 125 (atik)</span></span><span class="sfc Clay"><i></i><span><span class="cn">红土</span><span class="en">Clay</span></span></span></div></div><div class="rr-score">7-5 6-4</div></div></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-head"><h3><span><span class="cn">世界排名前十</span><span class="en">Top 10</span></span></h3>
+        <a class="panel-more" href="rankings.html"><span><span class="cn">完整排名</span><span class="en">Full ranking</span></span> →</a></div>
+      <div class="mini-boards"><div class="mini-row" style="padding:7px 18px"><span class="n"><span class="i" style="font-family:var(--font-en);color:var(--ivory-mute);width:20px;display:inline-block">1</span><a href="player-324166.html" style="margin-left:8px"><span><span class="cn">叶连娜·莱巴金娜</span><span class="en">Elena Rybakina</span></span></a><span class="en" style="margin-left:6px">KAZ</span></span><span class="v">9,901</span></div><div class="mini-row" style="padding:7px 18px"><span class="n"><span class="i" style="font-family:var(--font-en);color:var(--ivory-mute);width:20px;display:inline-block">2</span><a href="player-320760.html" style="margin-left:8px"><span><span class="cn">阿里娜·萨巴伦卡</span><span class="en">Aryna Sabalenka</span></span></a><span class="en" style="margin-left:6px">BLR</span></span><span class="v">7,875</span></div><div class="mini-row" style="padding:7px 18px"><span class="n"><span class="i" style="font-family:var(--font-en);color:var(--ivory-mute);width:20px;display:inline-block">3</span><a href="player-316956.html" style="margin-left:8px"><span><span class="cn">杰茜卡·佩古拉</span><span class="en">Jessica Pegula</span></span></a><span class="en" style="margin-left:6px">USA</span></span><span class="v">7,265</span></div><div class="mini-row" style="padding:7px 18px"><span class="n"><span class="i" style="font-family:var(--font-en);color:var(--ivory-mute);width:20px;display:inline-block">4</span><a href="player-328560.html" style="margin-left:8px"><span><span class="cn">科科·高夫</span><span class="en">Coco Gauff</span></span></a><span class="en" style="margin-left:6px">USA</span></span><span class="v">7,244</span></div><div class="mini-row" style="padding:7px 18px"><span class="n"><span class="i" style="font-family:var(--font-en);color:var(--ivory-mute);width:20px;display:inline-block">5</span><a href="player-331809.html" style="margin-left:8px"><span><span class="cn">米拉·安德烈耶娃</span><span class="en">Mirra Andreeva</span></span></a><span class="en" style="margin-left:6px">RUS</span></span><span class="v">5,743</span></div><div class="mini-row" style="padding:7px 18px"><span class="n"><span class="i" style="font-family:var(--font-en);color:var(--ivory-mute);width:20px;display:inline-block">6</span><a href="player-329668.html" style="margin-left:8px"><span><span class="cn">琳达·诺斯科娃</span><span class="en">Linda Noskova</span></span></a><span class="en" style="margin-left:6px">CZE</span></span><span class="v">5,328</span></div><div class="mini-row" style="padding:7px 18px"><span class="n"><span class="i" style="font-family:var(--font-en);color:var(--ivory-mute);width:20px;display:inline-block">7</span><a href="player-316738.html" style="margin-left:8px"><span><span class="cn">叶林娜·斯维托林纳</span><span class="en">Elina Svitolina</span></span></a><span class="en" style="margin-left:6px">UKR</span></span><span class="v">4,809</span></div><div class="mini-row" style="padding:7px 18px"><span class="n"><span class="i" style="font-family:var(--font-en);color:var(--ivory-mute);width:20px;display:inline-block">8</span><a href="player-322191.html" style="margin-left:8px"><span><span class="cn">卡罗利娜·穆霍娃</span><span class="en">Karolina Muchova</span></span></a><span class="en" style="margin-left:6px">CZE</span></span><span class="v">4,683</span></div><div class="mini-row" style="padding:7px 18px"><span class="n"><span class="i" style="font-family:var(--font-en);color:var(--ivory-mute);width:20px;display:inline-block">9</span><a href="player-326408.html" style="margin-left:8px"><span><span class="cn">伊加·斯维亚特克</span><span class="en">Iga Swiatek</span></span></a><span class="en" style="margin-left:6px">POL</span></span><span class="v">4,619</span></div><div class="mini-row" style="padding:7px 18px"><span class="n"><span class="i" style="font-family:var(--font-en);color:var(--ivory-mute);width:20px;display:inline-block">10</span><a href="player-326482.html" style="margin-left:8px"><span><span class="cn">玛尔塔·科斯秋克</span><span class="en">Marta Kostyuk</span></span></a><span class="en" style="margin-left:6px">UKR</span></span><span class="v">3,980</span></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3><span><span class="cn">赛季数据领跑</span><span class="en">Stat Leaders</span></span></h3>
+        <a class="panel-more" href="stats.html"><span><span class="cn">全部榜单</span><span class="en">All boards</span></span> →</a></div>
+      <div class="mini-boards"><div class="mini-board"><div class="mini-head"><span><span class="cn">ACE 球</span><span class="en">Aces</span></span><span>total</span></div><div class="mini-row"><span class="n"><a href="player-324166.html">叶连娜·莱巴金娜</a></span><span class="v">411</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:100.0%"></i></span></div><div class="mini-row"><span class="n"><a href="player-329668.html">琳达·诺斯科娃</a></span><span class="v">336</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:81.8%"></i></span></div><div class="mini-row"><span class="n"><a href="player-320760.html">阿里娜·萨巴伦卡</a></span><span class="v">281</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:68.4%"></i></span></div><div class="mini-row"><span class="n"><a href="player-316956.html">杰茜卡·佩古拉</a></span><span class="v">270</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:65.7%"></i></span></div><div class="mini-row"><span class="n"><a href="player-328120.html">郑钦文</a></span><span class="v">252</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:61.3%"></i></span></div></div><div class="mini-board"><div class="mini-head"><span><span class="cn">双误</span><span class="en">Double faults</span></span><span>total</span></div><div class="mini-row"><span class="n"><a href="player-328560.html">科科·高夫</a></span><span class="v">334</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:100.0%"></i></span></div><div class="mini-row"><span class="n"><a href="player-329668.html">琳达·诺斯科娃</a></span><span class="v">245</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:73.4%"></i></span></div><div class="mini-row"><span class="n"><a href="player-319939.html">叶莲娜·奥斯塔朋科</a></span><span class="v">237</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:71.0%"></i></span></div><div class="mini-row"><span class="n"><a href="player-326007.html">阿莱西娅·帕克斯</a></span><span class="v">227</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:68.0%"></i></span></div><div class="mini-row"><span class="n"><a href="player-320124.html">宝拉·巴多萨</a></span><span class="v">224</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:67.1%"></i></span></div></div><div class="mini-board"><div class="mini-head"><span><span class="cn">一发成功率</span><span class="en">First serve in</span></span><span>season %</span></div><div class="mini-row"><span class="n"><a href="player-318711.html">玛雅·谢里夫</a></span><span class="v">76.8%</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:100.0%"></i></span></div><div class="mini-row"><span class="n"><a href="player-320716.html">雷娜塔·扎拉祖亚</a></span><span class="v">74.7%</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:97.3%"></i></span></div><div class="mini-row"><span class="n"><a href="player-310926.html">劳拉·西格蒙德</a></span><span class="v">74.2%</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:96.6%"></i></span></div><div class="mini-row"><span class="n"><a href="player-327391.html">凯蒂·沃利内茨</a></span><span class="v">73.9%</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:96.2%"></i></span></div><div class="mini-row"><span class="n"><a href="player-327182.html">奥列克桑德拉·奥利伊尼科娃</a></span><span class="v">72.1%</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:93.9%"></i></span></div></div><div class="mini-board"><div class="mini-head"><span><span class="cn">一发得分率</span><span class="en">1st serve points won</span></span><span>season %</span></div><div class="mini-row"><span class="n"><a href="player-324166.html">叶连娜·莱巴金娜</a></span><span class="v">74.1%</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:100.0%"></i></span></div><div class="mini-row"><span class="n"><a href="player-328120.html">郑钦文</a></span><span class="v">74.1%</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:100.0%"></i></span></div><div class="mini-row"><span class="n"><a href="player-329668.html">琳达·诺斯科娃</a></span><span class="v">73.1%</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:98.7%"></i></span></div><div class="mini-row"><span class="n"><a href="player-319998.html">大坂直美</a></span><span class="v">72.0%</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:97.2%"></i></span></div><div class="mini-row"><span class="n"><a href="player-322087.html">雷贝卡.马萨洛娃</a></span><span class="v">71.6%</span><span class="mini-bar" style="grid-column:1/-1"><i style="width:96.6%"></i></span></div></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><h3><span><span class="cn">生涯数据领跑</span><span class="en">Career Leaders</span></span></h3>
+      <span class="panel-note"><span><span class="cn">现役排名球员中的历史累计</span><span class="en">All-time among currently ranked players</span></span></span></div>
+    <div class="career-grid"><div class="career-col"><h4><span><span class="cn">单打冠军</span><span class="en">Singles titles</span></span></h4><div class="career-row"><span class="i">1</span><span class="n"><a href="player-326408.html">伊加·斯维亚特克</a></span><span class="v">26</span></div><div class="career-row"><span class="i">2</span><span class="n"><a href="player-320760.html">阿里娜·萨巴伦卡</a></span><span class="v">24</span></div><div class="career-row"><span class="i">3</span><span class="n"><a href="player-316738.html">叶林娜·斯维托林纳</a></span><span class="v">20</span></div><div class="career-row"><span class="i">4</span><span class="n"><a href="player-313974.html">卡罗利娜·普利什科娃</a></span><span class="v">17</span></div><div class="career-row"><span class="i">5</span><span class="n"><a href="player-324166.html">叶连娜·莱巴金娜</a></span><span class="v">14</span></div><div class="career-row"><span class="i">6</span><span class="n"><a href="player-260142.html">薇拉·兹沃纳列娃</a></span><span class="v">12</span></div><div class="career-row"><span class="i">7</span><span class="n"><a href="player-328560.html">科科·高夫</a></span><span class="v">12</span></div><div class="career-row"><span class="i">8</span><span class="n"><a href="player-316956.html">杰茜卡·佩古拉</a></span><span class="v">11</span></div></div><div class="career-col"><h4><span><span class="cn">生涯胜场</span><span class="en">Career match wins</span></span></h4><div class="career-row"><span class="i">1</span><span class="n"><a href="player-313349.html">阿兰查·鲁斯</a></span><span class="v">756</span></div><div class="career-row"><span class="i">2</span><span class="n"><a href="player-310440.html">塔季扬娜·玛丽亚</a></span><span class="v">733</span></div><div class="career-row"><span class="i">3</span><span class="n"><a href="player-120420.html">瓦拉瓦拉·勒普琴科</a></span><span class="v">727</span></div><div class="career-row"><span class="i">4</span><span class="n"><a href="player-313974.html">卡罗利娜·普利什科娃</a></span><span class="v">664</span></div><div class="career-row"><span class="i">5</span><span class="n"><a href="player-312328.html">麦迪逊·布伦格尔</a></span><span class="v">650</span></div><div class="career-row"><span class="i">6</span><span class="n"><a href="player-314660.html">叶卡捷琳·戈尔格泽</a></span><span class="v">620</span></div><div class="career-row"><span class="i">7</span><span class="n"><a href="player-311779.html">张帅</a></span><span class="v">619</span></div><div class="career-row"><span class="i">8</span><span class="n"><a href="player-310926.html">劳拉·西格蒙德</a></span><span class="v">615</span></div></div><div class="career-col"><h4><span><span class="cn">生涯奖金</span><span class="en">Career prize money</span></span></h4><div class="career-row"><span class="i">1</span><span class="n"><a href="player-320760.html">阿里娜·萨巴伦卡</a></span><span class="v">$53M</span></div><div class="career-row"><span class="i">2</span><span class="n"><a href="player-326408.html">伊加·斯维亚特克</a></span><span class="v">$48M</span></div><div class="career-row"><span class="i">3</span><span class="n"><a href="player-328560.html">科科·高夫</a></span><span class="v">$37M</span></div><div class="career-row"><span class="i">4</span><span class="n"><a href="player-324166.html">叶连娜·莱巴金娜</a></span><span class="v">$35M</span></div><div class="career-row"><span class="i">5</span><span class="n"><a href="player-316738.html">叶林娜·斯维托林纳</a></span><span class="v">$31M</span></div><div class="career-row"><span class="i">6</span><span class="n"><a href="player-316956.html">杰茜卡·佩古拉</a></span><span class="v">$28M</span></div><div class="career-row"><span class="i">7</span><span class="n"><a href="player-313974.html">卡罗利娜·普利什科娃</a></span><span class="v">$27M</span></div><div class="career-row"><span class="i">8</span><span class="n"><a href="player-319998.html">大坂直美</a></span><span class="v">$27M</span></div></div></div>
+  </div>
 </div>
-
-<main id="main" hidden>
-
-<!-- ══════════════════════════════════════════════════════════ 总览 -->
-<section id="overview" class="tab-panel active">
-  <div class="hero">
-    <div class="hero-court" aria-hidden="true"></div>
-    <div class="hero-content">
-      <div class="hero-eyebrow">
-        <span class="dot-live"></span>
-        <span class="cn">官方数据源</span><span class="en">OFFICIAL DATA FEED</span>
-      </div>
-      <h1 class="hero-title">
-        <span class="cn" id="heroTitleCn">2026 赛季</span>
-        <span class="en" id="heroTitleEn">2026 SEASON</span>
-      </h1>
-      <p class="hero-sub">
-        <span class="cn">数据来源：WTA 官方公开数据接口 · 涵盖单打世界排名、赛季赛程与赛果、球员档案、发球接发统计与历史交手记录</span>
-        <span class="en">Sourced from the WTA public data API — singles rankings, season calendar and results, player records, serve and return statistics, and career head-to-heads</span>
-      </p>
-      <div class="hero-meta">
-        <span><i class="cn">更新日期</i><i class="en">Updated</i><b id="heroUpdated">—</b></span>
-        <span><i class="cn">排名周</i><i class="en">Rankings week</i><b id="heroRankWeek">—</b></span>
-        <span><i class="cn">收录球员</i><i class="en">Players</i><b id="heroPlayers">—</b></span>
-      </div>
-    </div>
-  </div>
-
-  <div class="wrap">
-    <h2 class="sec-title"><span class="cn">赛季概览</span><span class="en">Season At A Glance</span></h2>
-    <div class="kpi-grid" id="kpiGrid"></div>
-
-    <div class="two-col">
-      <div class="panel">
-        <div class="panel-head">
-          <h3><span class="cn">冠军墙</span><span class="en">Champions</span></h3>
-          <span class="panel-note" id="champCount"></span>
-        </div>
-        <div class="champion-wall" id="championWall"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <h3><span class="cn">最新赛果</span><span class="en">Latest Results</span></h3>
-          <span class="panel-note" id="recentCount"></span>
-        </div>
-        <div class="recent-list" id="recentList"></div>
-      </div>
-    </div>
-
-    <div class="two-col">
-      <div class="panel">
-        <div class="panel-head">
-          <h3><span class="cn">世界排名前十</span><span class="en">Top 10</span></h3>
-          <a class="panel-more" href="#rankings"><span class="cn">完整排名</span><span class="en">Full ranking</span> →</a>
-        </div>
-        <div id="topTen"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-head">
-          <h3><span class="cn">赛季数据领跑</span><span class="en">Stat Leaders</span></h3>
-          <a class="panel-more" href="#stats"><span class="cn">全部榜单</span><span class="en">All boards</span> →</a>
-        </div>
-        <div class="mini-boards" id="miniBoards"></div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head">
-        <h3><span class="cn">生涯数据领跑</span><span class="en">Career Leaders</span></h3>
-        <span class="panel-note"><span class="cn">现役排名球员中的历史累计</span><span class="en">All-time among currently ranked players</span></span>
-      </div>
-      <div class="career-grid" id="careerGrid"></div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════════ 赛程 -->
-<section id="schedule" class="tab-panel">
-  <div class="wrap">
-    <h2 class="sec-title"><span class="cn">赛季赛程</span><span class="en">Tour Calendar</span></h2>
-    <div class="filter-bar">
-      <div class="seg-group" id="calYear"></div>
-      <div class="seg-group" id="calLevel"></div>
-      <div class="seg-group" id="calStatus"></div>
-    </div>
-    <div class="panel">
-      <div class="panel-head">
-        <h3 id="calTitle">—</h3>
-        <span class="panel-note" id="calCount"></span>
-      </div>
-      <div class="timeline" id="calTimeline"></div>
-    </div>
-    <div class="stat-strip" id="calStats"></div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════════ 赛果 -->
-<section id="results" class="tab-panel">
-  <div class="wrap">
-    <h2 class="sec-title"><span class="cn">比赛结果</span><span class="en">Match Results</span></h2>
-    <div class="filter-bar">
-      <div class="seg-group" id="resRound"></div>
-      <div class="seg-group" id="resSurface"></div>
-      <div class="search-box">
-        <input type="search" id="resSearch" placeholder="搜索球员 / 赛事（中文 · English）…" autocomplete="off">
-      </div>
-    </div>
-    <div class="panel">
-      <div class="panel-head">
-        <h3><span class="cn">赛果列表</span><span class="en">Results</span></h3>
-        <span class="panel-note" id="resCount"></span>
-      </div>
-      <div class="result-list" id="resList"></div>
-      <button class="btn-more" id="resMore" hidden><span class="cn">显示更多</span><span class="en">Show more</span></button>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════════ 排名 -->
-<section id="rankings" class="tab-panel">
-  <div class="wrap">
-    <h2 class="sec-title"><span class="cn">世界排名</span><span class="en">World Rankings</span></h2>
-    <div class="filter-bar">
-      <div class="seg-group" id="rankMetric">
-        <button class="seg active" data-m="points"><span class="cn">排名积分</span><span class="en">Points</span></button>
-        <button class="seg" data-m="weeks"><span class="cn">排名走势</span><span class="en">Trajectory</span></button>
-      </div>
-      <div class="search-box">
-        <input type="search" id="rankSearch" placeholder="搜索球员 / 国家（中文 · English）…" autocomplete="off">
-      </div>
-    </div>
-
-    <div class="rank-podium" id="rankPodium"></div>
-
-    <div class="panel rank-panel">
-      <div class="rank-head">
-        <div>
-          <h3><span class="cn">单打世界排名</span><span class="en">Singles World Ranking</span></h3>
-          <p class="rank-desc" id="rankDesc">—</p>
-        </div>
-        <div class="rank-updated" id="rankUpdated">—</div>
-      </div>
-      <div class="table-scroll">
-        <table class="rank-table">
-          <thead>
-            <tr>
-              <th class="c-pos"><span class="cn">名次</span><span class="en">#</span></th>
-              <th class="c-player"><span class="cn">球员</span><span class="en">Player</span></th>
-              <th class="c-country"><span class="cn">国家/地区</span><span class="en">Country</span></th>
-              <th class="c-move"><span class="cn">变动</span><span class="en">Move</span></th>
-              <th class="c-age"><span class="cn">年龄</span><span class="en">Age</span></th>
-              <th class="c-ev"><span class="cn">参赛</span><span class="en">Events</span></th>
-              <th class="c-pts"><span class="cn">积分</span><span class="en">Points</span></th>
-            </tr>
-          </thead>
-          <tbody id="rankBody"></tbody>
-        </table>
-      </div>
-      <button class="btn-more" id="rankMore"><span class="cn">显示更多</span><span class="en">Show more</span></button>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════════ 球员 -->
-<section id="players" class="tab-panel">
-  <div class="wrap">
-    <h2 class="sec-title"><span class="cn">球员数据</span><span class="en">Players</span></h2>
-    <div class="filter-bar">
-      <div class="search-box grow">
-        <input type="search" id="playerSearch" placeholder="搜索球员（中文 / English）…" autocomplete="off">
-      </div>
-      <div class="seg-group" id="countryFilter"></div>
-    </div>
-    <div class="sort-bar">
-      <span class="sort-label"><span class="cn">排序</span><span class="en">Sort</span></span>
-      <div class="seg-group sm" id="playerSort">
-        <button class="seg active" data-s="rank"><span class="cn">排名</span><span class="en">Rank</span></button>
-        <button class="seg" data-s="wins"><span class="cn">胜场</span><span class="en">Wins</span></button>
-        <button class="seg" data-s="pct"><span class="cn">胜率</span><span class="en">Win %</span></button>
-        <button class="seg" data-s="titles"><span class="cn">冠军</span><span class="en">Titles</span></button>
-        <button class="seg" data-s="aces"><span class="cn">ACE 球</span><span class="en">Aces</span></button>
-        <button class="seg" data-s="prize"><span class="cn">生涯奖金</span><span class="en">Prize</span></button>
-      </div>
-    </div>
-    <div class="player-grid" id="playerGrid"></div>
-    <div class="empty-state" id="playerEmpty" hidden>
-      <span class="cn">没有符合条件的球员</span><span class="en">No players match this filter</span>
-    </div>
-    <button class="btn-more" id="playerMore"><span class="cn">显示更多</span><span class="en">Show more</span></button>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════════ 数据 -->
-<section id="stats" class="tab-panel">
-  <div class="wrap">
-    <h2 class="sec-title"><span class="cn">数据中心</span><span class="en">Statistics Centre</span></h2>
-    <div class="leader-grid" id="leaderGrid"></div>
-
-    <div class="panel">
-      <div class="panel-head">
-        <h3><span class="cn">生涯领跑榜</span><span class="en">All-Time Leaders</span></h3>
-        <div class="seg-group sm" id="careerSort">
-          <button class="seg active" data-s="titles"><span class="cn">单打冠军</span><span class="en">Titles</span></button>
-          <button class="seg" data-s="careerWins"><span class="cn">生涯胜场</span><span class="en">Wins</span></button>
-          <button class="seg" data-s="prizeMoney"><span class="cn">生涯奖金</span><span class="en">Prize money</span></button>
-        </div>
-      </div>
-      <div class="table-scroll">
-        <table class="rank-table title-board">
-          <thead>
-            <tr>
-              <th class="c-pos"><span class="cn">名次</span><span class="en">#</span></th>
-              <th class="c-player"><span class="cn">球员</span><span class="en">Player</span></th>
-              <th class="c-country"><span class="cn">国家/地区</span><span class="en">Country</span></th>
-              <th class="c-titles" id="careerValueHead"><span class="cn">冠军</span><span class="en">Titles</span></th>
-            </tr>
-          </thead>
-          <tbody id="careerBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head">
-        <h3><span class="cn">赛事级别与场地分布</span><span class="en">Events by Level &amp; Surface</span></h3>
-      </div>
-      <div class="two-col tight">
-        <div id="levelSplit"></div>
-        <div id="surfaceSplit"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════════════════════════════════════════════════════ 交手 -->
-<section id="h2h" class="tab-panel">
-  <div class="wrap">
-    <h2 class="sec-title"><span class="cn">历史交手</span><span class="en">Head-to-Head</span></h2>
-    <div class="panel">
-      <div class="h2h-selectors">
-        <div class="h2h-pick">
-          <label><span class="cn">球员一</span><span class="en">Player one</span></label>
-          <input type="search" id="h2hA" placeholder="搜索球员…" autocomplete="off">
-          <div class="h2h-suggest" id="h2hSuggestA" hidden></div>
-        </div>
-        <div class="h2h-vs">VS</div>
-        <div class="h2h-pick">
-          <label><span class="cn">球员二</span><span class="en">Player two</span></label>
-          <input type="search" id="h2hB" placeholder="搜索球员…" autocomplete="off">
-          <div class="h2h-suggest" id="h2hSuggestB" hidden></div>
-        </div>
-      </div>
-      <div id="h2hResult"></div>
-    </div>
-  </div>
-</section>
 
 </main>
 
-<!-- ══════════════════════════════════════════════════════════════ 弹窗 -->
-<div class="modal" id="modal" hidden>
-  <div class="modal-backdrop" data-close></div>
-  <div class="modal-box" role="dialog" aria-modal="true">
-    <button class="modal-close" data-close aria-label="关闭 / Close">×</button>
-    <div class="modal-body" id="modalBody"></div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════ 页脚 -->
 <footer class="site-footer">
   <div class="footer-inner">
     <div class="footer-brand">
       <span class="brand-ball small" aria-hidden="true"></span>
       <div>
-        <strong><span class="cn">女子网球巡回赛 · 数据看板</span><span class="en">WTA Tour Data Dashboard</span></strong>
-        <p class="footer-note">
-          <span class="cn">独立开源项目，与 WTA 无隶属关系。球员数据版权归 WTA Tour, Inc. 所有。</span>
-          <span class="en">An independent open-source project, not affiliated with the WTA. Player data © WTA Tour, Inc.</span>
-        </p>
+        <strong><span><span class="cn">女子网球巡回赛 · 数据看板</span><span class="en">WTA Tour Data Dashboard</span></span></strong>
+        <p class="footer-note"><span><span class="cn">独立开源项目，与 WTA 无隶属关系。球员数据版权归 WTA Tour, Inc. 所有。</span><span class="en">An independent open-source project, not affiliated with the WTA. Player data © WTA Tour, Inc.</span></span></p>
       </div>
     </div>
-    <div class="footer-row" id="footerStats"></div>
+    <div class="footer-row"><div class="f"><b>300</b><span><span><span class="cn">排名球员</span><span class="en">Players</span></span></span></div><div class="f"><b>121</b><span><span><span class="cn">赛季赛事</span><span class="en">Events</span></span></span></div><div class="f"><b>8,579</b><span><span><span class="cn">赛季比赛</span><span class="en">Matches</span></span></span></div><div class="f"><b>35,280</b><span><span><span class="cn">交手配对</span><span class="en">H2H pairs</span></span></span></div><div class="f"><b>221</b><span><span><span class="cn">收录赛事</span><span class="en">Calendar</span></span></span></div></div>
     <div class="footer-bar">
-      <span><i class="cn">数据来源</i><i class="en">Source</i>
-        <a href="https://www.wtatennis.com/" target="_blank" rel="noopener">wtatennis.com</a>
-      </span>
-      <span><i class="cn">最后更新</i><i class="en">Last updated</i><b id="footUpdated">—</b></span>
+      <span><span><span class="cn">数据来源</span><span class="en">Source</span></span>
+        <a href="https://www.wtatennis.com/" target="_blank" rel="noopener">wtatennis.com</a></span>
+      <span><span><span class="cn">最后更新</span><span class="en">Last updated</span></span> <b>15 Sep 2026</b></span>
       <a class="footer-gh" href="https://github.com/moonquake2004/wta-tour-dashboard" target="_blank" rel="noopener">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
         <span class="en">GitHub</span>
@@ -371,9 +135,6 @@
     </div>
   </div>
 </footer>
-
-<script src="data/dashboard.js?v=20260915052220"></script>
-<script src="data/h2h.js?v=20260915052220"></script>
-<script src="assets/js/app.js?v=20260915052220"></script>
+</div><!-- /lang-ctx -->
 </body>
 </html>

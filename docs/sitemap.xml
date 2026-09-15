@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
-  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/#rankings</loc><priority>0.8</priority></url>
-  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/#players</loc><priority>0.8</priority></url>
-  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/#schedule</loc><priority>0.7</priority></url>
-  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/#results</loc><priority>0.7</priority></url>
-  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/#stats</loc><priority>0.6</priority></url>
-  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/#h2h</loc><priority>0.6</priority></url>
+  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/index.html</loc></url>
+  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/rankings.html</loc></url>
+  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/players.html</loc></url>
+  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/calendar.html</loc></url>
+  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/results.html</loc></url>
+  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/stats.html</loc></url>
+  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/h2h.html</loc></url>
 </urlset>
