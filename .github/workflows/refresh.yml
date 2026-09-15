@@ -1,0 +1,63 @@
+name: Refresh WTA data
+
+# The WTA publishes new rankings on Mondays. This workflow pulls the current
+# snapshot, rebuilds the derived aggregates and publishes the site.
+#
+# Manual runs are available from the Actions tab, with an option to do a deeper
+# refresh that also re-fetches biographies, match logs and the calendar.
+
+on:
+  schedule:
+    # Mondays at 09:17 UTC — comfortably after the WTA publishes its list.
+    - cron: '17 9 * * 1'
+  workflow_dispatch:
+    inputs:
+      deep:
+        description: 'Also refresh biographies, match logs and the calendar'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Refresh rankings
+        if: ${{ github.event_name == 'schedule' || !inputs.deep }}
+        run: node scripts/refresh-rankings.mjs
+
+      - name: Full data refresh
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.deep }}
+        env:
+          WTA_WORKERS: '4'
+          WTA_CONCURRENCY: '5'
+        run: node scripts/build.mjs
+
+      - name: Assemble site
+        run: node scripts/site.mjs
+
+      - name: Commit updated snapshots
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A data docs site
+          if git diff --staged --quiet; then
+            echo "No data changes this week."
+          else
+            AS_OF=$(node -e "try{console.log(require('./data/rankings-singles.json').asOf.slice(0,10))}catch{console.log('unknown')}")
+            git commit -m "data: official WTA snapshot (${AS_OF})"
+            git push
+          fi

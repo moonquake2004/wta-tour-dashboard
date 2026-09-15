@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log*
+pnpm-debug.log*
+.npm/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Local scratch
+tmp/
+.cache/
+*.log
+
+# Local preview artefacts (docs/ is generated but IS committed, because
+# GitHub Pages serves the site from it)
+!docs/

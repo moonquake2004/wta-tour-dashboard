@@ -1,0 +1,32 @@
+{
+  "name": "wta-tour-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "An independent, open-source data dashboard for the Hologic WTA Tour, built from the official WTA public data feed.",
+  "keywords": [
+    "wta",
+    "tennis",
+    "dashboard",
+    "rankings",
+    "sports-data",
+    "static-site"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "build:light": "node scripts/build.mjs --skip-players --skip-matches",
+    "refresh": "node scripts/refresh-rankings.mjs",
+    "data:h2h": "node scripts/fetch-h2h.mjs",
+    "data:derive": "node scripts/derive.mjs",
+    "site": "node scripts/site.mjs",
+    "serve": "node scripts/serve.mjs",
+    "dev": "node scripts/site.mjs && node scripts/serve.mjs",
+    "publish": "node scripts/build.mjs && node scripts/site.mjs",
+    "verify": "node scripts/verify.mjs",
+    "check": "node scripts/verify.mjs && node scripts/site.mjs"
+  }
+}
