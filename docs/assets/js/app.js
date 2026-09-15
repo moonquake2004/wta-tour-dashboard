@@ -257,11 +257,11 @@
 
     var no1 = D.players[0];
     var kpis = [
-      { cn: '排名球员', en: 'Ranked players', v: int(c.rankedPlayers), sub: bi('单打世界排名收录', 'singles ranking depth'), accent: 'var(--ball-500)' },
+      { cn: '排名球员', en: 'Ranked players', v: int(c.rankedPlayers), sub: bi('单打世界排名收录', 'singles ranking depth'), accent: 'var(--gold-500)' },
       { cn: '赛季赛事', en: 'Season events', v: int(c.events), sub: bi(c.completedEvents + ' 项已结束', c.completedEvents + ' completed'), accent: 'var(--grass-400)' },
-      { cn: '赛季比赛', en: 'Season matches', v: int(c.seasonMatches), sub: bi('已收录赛果', 'results captured'), accent: 'var(--line-white)' },
-      { cn: '产生冠军', en: 'Titles won', v: int(c.champions), sub: bi('本赛季单打冠军', 'singles champions'), accent: 'var(--ball-500)' },
-      { cn: '世界第一', en: 'World No.1', v: no1 ? playerZhOf(no1) || no1.name : '—', sub: no1 ? bi(int(no1.points) + ' 积分', int(no1.points) + ' pts') : '', accent: 'var(--ball-400)', small: true },
+      { cn: '赛季比赛', en: 'Season matches', v: int(c.seasonMatches), sub: bi('已收录赛果', 'results captured'), accent: 'var(--grass-500)' },
+      { cn: '产生冠军', en: 'Titles won', v: int(c.champions), sub: bi('本赛季单打冠军', 'singles champions'), accent: 'var(--gold-500)' },
+      { cn: '世界第一', en: 'World No.1', v: no1 ? playerZhOf(no1) || no1.name : '—', sub: no1 ? bi(int(no1.points) + ' 积分', int(no1.points) + ' pts') : '', accent: 'var(--gold-400)', small: true },
       { cn: '下周开赛', en: 'Upcoming', v: int(c.upcomingEvents), sub: bi('未开始的赛事', 'events not yet played'), accent: 'var(--grass-500)' }
     ];
     $('#kpiGrid').innerHTML = kpis.map(function (k) {
@@ -600,7 +600,7 @@
     $('#playerGrid').innerHTML = shown.map(function (p) {
       var s = p.season || {};
       var serve = p.serve || {};
-      var accent = s.w != null && s.l != null && s.w > s.l ? 'var(--grass-400)' : 'var(--line-white)';
+      var accent = s.w != null && s.l != null && s.w > s.l ? 'var(--gold-500)' : 'var(--hard-600)';
       return '<div class="player-card" data-player="' + p.id + '" style="--pc-accent:' + accent + '">' +
         '<div class="pc-top">' + av(p.id, p.name, 54) +
           '<div class="pc-id">' +

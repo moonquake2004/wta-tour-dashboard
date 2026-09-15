@@ -31,11 +31,21 @@ broadcast results dashboard:
   shown in Chinese and English at once; a three-way switch (`中/EN · 中文 · EN`)
   collapses to one language and the choice persists locally. The switch is pure
   CSS (`html[data-lang]`), so changing language re-renders nothing.
-- **Clay-court design language.** Terracotta court ground with grass-green header,
-  the three Grand Slam surface colours used as data accents, tennis-ball yellow
-  for numerals and white court lines. Typography pairs Noto Serif SC for Chinese
-  display with Oswald / Barlow Condensed for Latin and numerals (the same stack a
-  companion snooker dashboard uses). All sampled text meets WCAG AA contrast.
+- **Palette drawn from the majors.** The colour scheme was built from the official
+  brand colours of the four Grand Slams, read from each tournament's own website:
+
+  | Tournament | Official colours found |
+  | --- | --- |
+  | Wimbledon | deep green `#00552b` / `#00331a`, purple `#540082`, green-gold `#816c3c` |
+  | Australian Open | navy `#1e2886`, deep blue `#003a5d`, bright blue `#0092d3` |
+  | Roland Garros | terracotta `#cc4e0e` / `#e38045`, deep green `#00503c` / `#033629` |
+  | US Open | blue `#2478cc` / `#00288c`, gold `#ffd400` |
+
+  The dashboard is built on the Wimbledon court green with cream text, and gold is
+  reserved strictly for honours — winners, champions, the top three, and the Grand
+  Slam level tag. The three surface colours are used only to identify a surface.
+  Typography pairs Noto Serif SC for Chinese display with Oswald / Barlow Condensed
+  for Latin and numerals. All sampled text meets WCAG AA (6.6:1 to 14.9:1).
 - **Player detail modal** — click any player anywhere for season records by year,
   serve splits, career highs and prize money.
 - **Event results modal** — click any event on the calendar for its complete

@@ -8,37 +8,59 @@
    ========================================================================== */
 
 :root{
-  /* 红土球场（clay court）—— 主色调，取自 Roland Garros 的球场色 */
-  --court-900:#2a0f08;
-  --court-800:#3c170d;
-  --court-700:#572313;
-  --court-600:#73301b;
-  --court-500:#8f3f24;
-  /* 草地（grass court）—— 对照色，用于页头与强调 */
-  --grass-700:#0f3d29;
-  --grass-600:#17593b;
-  --grass-500:#1f7550;
-  --grass-400:#2f9c69;
-  /* 红土强调 */
-  --clay-700:#a34a28;
-  --clay-600:#c25a31;
-  --clay-500:#dd7043;
-  --clay-400:#ec9670;
-  /* 硬地蓝（保留作数据对比色） */
-  --hard-700:#1d4a80;
-  --hard-600:#2a63a8;
-  --hard-500:#3f86d4;
-  --hard-400:#6ba8e8;
-  /* 网球荧光黄 */
+  /* ----------------------------------------------------------------------
+     配色取自四大满贯的官方品牌色（实测各官网 CSS）：
+       温网  深绿 #00552b / #00331a  + 紫 #540082 + 绿金 #816c3c
+       澳网  藏青 #1e2886 + 深蓝 #003a5d + 亮蓝 #0092d3
+       法网  陶土橙 #cc4e0e / #e38045 + 深绿 #00503c
+       美网  蓝 #2478cc / #00288c + 金 #ffd400
+     场地绿为主色（温网传统），金为荣誉/胜者色，各场地色仅用于区分场地类型。
+     ---------------------------------------------------------------------- */
+
+  /* 场地绿 —— 主色（源自温网 #00552b / #00331a 的层次扩展） */
+  --court-900:#031a12;
+  --court-800:#04231a;
+  --court-700:#063324;
+  --court-600:#08472f;
+  --court-500:#00552b;
+
+  /* 草地绿 —— 明亮强调（底色之上可读的绿） */
+  --grass-700:#0a6340;
+  --grass-600:#0e7a4e;
+  --grass-500:#149158;
+  --grass-400:#2ab072;
+
+  /* 金 —— 胜者 / 冠军 / 领跑（美网 #ffd400，温网绿金 #816c3c 的暖金调和） */
+  --gold-900:#5c4514;
+  --gold-700:#8a6a1f;
+  --gold-600:#b8912c;
+  --gold-500:#d9ac4e;
+  --gold-400:#f0cf72;
+  --gold-300:#ffe89a;
+
+  /* 红土 —— 仅用于标识红土场地（法网 #cc4e0e） */
+  --clay-700:#a33d0b;
+  --clay-600:#c24a0d;
+  --clay-500:#cc4e0e;
+  --clay-400:#e38045;
+
+  /* 硬地蓝 —— 仅用于标识硬地场地（美网 #2478cc / 澳网 #0092d3） */
+  --hard-700:#00304d;
+  --hard-600:#0a5a86;
+  --hard-500:#2478cc;
+  --hard-400:#4f9de0;
+
+  /* 网球荧光黄 —— 只用于"实时/进行中"这类活力提示 */
   --ball-700:#8f9a12;
   --ball-600:#bccb1c;
   --ball-500:#d8e63c;
   --ball-400:#eaf470;
-  /* 中性：红土场上的米白 */
-  --ivory:#f7f1e2;
-  --ivory-dim:#d6c6b6;
-  --ivory-mute:#a58e7c;
-  --line-white:rgba(255,255,255,.86);
+
+  /* 中性：奶油白（温网米白） */
+  --ivory:#f6f2e6;
+  --ivory-dim:#cbd5cd;
+  --ivory-mute:#8ba295;
+  --line-white:rgba(255,255,255,.88);
 
   --radius:14px;
   --radius-sm:9px;
@@ -61,9 +83,9 @@ html{scroll-behavior:smooth;scroll-padding-top:126px}
 body{
   font-family:var(--font-ui);
   background:
-    radial-gradient(1100px 620px at 50% -12%, rgba(31,117,80,.34) 0%, transparent 62%),
-    radial-gradient(900px 540px at 86% 6%, rgba(216,230,60,.1) 0%, transparent 60%),
-    linear-gradient(180deg,var(--court-800) 0%, #33130b 56%, #270d07 100%);
+    radial-gradient(1100px 620px at 50% -12%, rgba(20,145,88,.28) 0%, transparent 62%),
+    radial-gradient(900px 540px at 88% 4%, rgba(217,172,78,.12) 0%, transparent 58%),
+    linear-gradient(180deg,var(--court-800) 0%, #031a12 58%, #02120c 100%);
   background-attachment:fixed;
   color:var(--ivory);
   min-height:100vh;
@@ -71,14 +93,13 @@ body{
   line-height:1.5;
 }
 
-/* 红土质感：细密颗粒 + 极淡斜纹 */
+/* 草地质感：极细的割草纹（温网草坪的横竖条纹） */
 body::before{
-  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.6;
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.55;
   background-image:
-    repeating-linear-gradient(38deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px),
-    repeating-linear-gradient(-52deg, rgba(0,0,0,.055) 0 1px, transparent 1px 3px),
-    radial-gradient(rgba(255,255,255,.05) .5px, transparent .5px);
-  background-size:auto, auto, 7px 7px;
+    repeating-linear-gradient(90deg, rgba(255,255,255,.014) 0 42px, transparent 42px 84px),
+    repeating-linear-gradient(32deg, rgba(255,255,255,.02) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(-58deg, rgba(0,0,0,.05) 0 1px, transparent 1px 3px);
 }
 
 a{color:inherit;text-decoration:none}
@@ -108,7 +129,7 @@ html[data-lang="en"] .en{display:inline !important;margin-left:0;font-size:1em;o
 
 /* 语言切换器内部始终双语，不受模式影响 */
 .lang-switch{display:inline-flex;gap:2px;padding:3px;border-radius:9px;
-  background:rgba(0,0,0,.4);border:1px solid rgba(216,230,60,.26);flex:0 0 auto}
+  background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.16);flex:0 0 auto}
 .lang-btn{padding:4px 11px;border-radius:6px;text-align:center;line-height:1.15;
   color:var(--ivory-dim);transition:background .16s,color .16s}
 .lang-btn .cn{display:block !important;font-family:var(--font-cn);font-size:12px}
@@ -121,10 +142,10 @@ html[data-lang="en"] .en{display:inline !important;margin-left:0;font-size:1em;o
 
 /* ══════════════════════════════════════════════════════ 页头 */
 .site-header{position:fixed;inset:0 0 auto 0;z-index:60;
-  background:linear-gradient(180deg,rgba(15,61,41,.97) 0%,rgba(23,89,59,.93) 62%,rgba(42,15,8,.94) 100%);
+  background:linear-gradient(180deg,rgba(4,35,26,.98) 0%,rgba(6,51,36,.95) 64%,rgba(3,26,18,.96) 100%);
   backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  border-bottom:1px solid rgba(216,230,60,.24);
-  box-shadow:0 8px 26px rgba(0,0,0,.46)}
+  border-bottom:1px solid rgba(217,172,78,.34);
+  box-shadow:0 8px 26px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05)}
 
 .header-inner{max-width:1360px;margin:0 auto;padding:11px 20px;
   display:flex;align-items:center;gap:16px;flex-wrap:wrap}
@@ -132,7 +153,7 @@ html[data-lang="en"] .en{display:inline !important;margin-left:0;font-size:1em;o
 .brand{display:flex;align-items:center;gap:11px;flex:1 1 auto;min-width:0}
 .brand-ball{width:34px;height:34px;border-radius:50%;flex:0 0 auto;position:relative;
   background:radial-gradient(circle at 34% 28%, #f2fa8c, #d8e63c 46%, #9aa81a);
-  box-shadow:0 0 0 1px rgba(255,255,255,.22), 0 6px 18px -6px rgba(216,230,60,.7)}
+  box-shadow:0 0 0 1px rgba(255,255,255,.22), 0 6px 18px -6px rgba(20,145,88,.7)}
 .brand-ball::after{content:"";position:absolute;inset:0;border-radius:50%;
   background:
     radial-gradient(ellipse 60% 22% at 50% 22%, transparent 62%, rgba(255,255,255,.9) 64%, transparent 68%),
@@ -167,7 +188,7 @@ html[data-lang="en"] .en{display:inline !important;margin-left:0;font-size:1em;o
   opacity:.6;margin:0}
 .nav-link:hover{background:rgba(255,255,255,.08)}
 .nav-link.active{background:linear-gradient(180deg,var(--grass-600),var(--grass-700));
-  border-color:rgba(216,230,60,.5);
+  border-color:rgba(42,176,114,.6);
   box-shadow:0 0 0 1px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.16)}
 .nav-link.active .en{color:var(--ball-400);opacity:.95}
 
@@ -192,21 +213,20 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .sec-title{font-family:var(--font-cn);font-weight:900;font-size:clamp(20px,3vw,27px);
   margin:6px 0 18px;padding-left:13px;position:relative;letter-spacing:.01em}
 .sec-title::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:4px;
-  border-radius:3px;background:linear-gradient(180deg,var(--ball-500),var(--clay-500))}
+  border-radius:3px;background:linear-gradient(180deg,var(--grass-400),var(--grass-600))}
 .sec-title .cn{display:block}
 .sec-title .en{display:block;font-family:var(--font-en);font-size:.42em;letter-spacing:.18em;
   color:var(--ivory-mute);opacity:1;margin-top:3px}
 
 /* ══════════════════════════════════════════════════════ Hero */
 .hero{position:relative;overflow:hidden;padding:0}
-.hero-court{position:absolute;inset:0;opacity:.72;pointer-events:none;
+.hero-court{position:absolute;inset:0;opacity:.8;pointer-events:none;
   background:
-    /* 红土平面本身的明暗 */
-    radial-gradient(140% 100% at 50% 0%, rgba(221,112,67,.34) 0%, transparent 62%),
-    linear-gradient(180deg, rgba(42,15,8,.18), rgba(42,15,8,.9) 80%, var(--court-800)),
-    /* 红土颗粒 */
-    radial-gradient(rgba(255,255,255,.05) .6px, transparent .6px);
-  background-size:auto, auto, 9px 9px;
+    /* 草地受光面 */
+    radial-gradient(140% 100% at 50% 0%, rgba(20,145,88,.4) 0%, transparent 64%),
+    linear-gradient(180deg, rgba(3,26,18,.14), rgba(3,26,18,.92) 82%, var(--court-800)),
+    /* 温网式割草条纹 */
+    repeating-linear-gradient(90deg, rgba(255,255,255,.03) 0 46px, transparent 46px 92px);
   mask-image:radial-gradient(120% 92% at 50% 0%, #000 32%, transparent 84%)}
 /* 球场白线：底线 + 发球线 + 中线（俯视球场的一半） */
 .hero-court::before{content:"";position:absolute;left:12%;right:12%;top:26%;height:2px;
@@ -219,7 +239,7 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
   font-size:11px;letter-spacing:.18em;color:var(--ball-400);margin-bottom:12px}
 .hero-eyebrow .cn{font-family:var(--font-cn);letter-spacing:.1em}
 .dot-live{width:7px;height:7px;border-radius:50%;background:var(--ball-500);
-  box-shadow:0 0 0 0 rgba(216,230,60,.7);animation:pulse 1.9s infinite;flex:0 0 auto}
+  box-shadow:0 0 0 0 rgba(216,230,60,.75);animation:pulse 1.9s infinite;flex:0 0 auto}
 @keyframes pulse{70%{box-shadow:0 0 0 9px rgba(216,230,60,0)}100%{box-shadow:0 0 0 0 rgba(216,230,60,0)}}
 .hero-title{font-family:var(--font-cn);font-weight:900;font-size:clamp(32px,5.4vw,60px);
   line-height:1.06;margin-bottom:14px;text-shadow:0 5px 18px rgba(0,0,0,.6)}
@@ -240,8 +260,8 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(172px,1fr));
   gap:14px;margin:22px 0 26px}
 .kpi{position:relative;padding:17px 18px 15px;border-radius:var(--radius);overflow:hidden;
-  background:linear-gradient(160deg,rgba(143,63,36,.42),rgba(42,15,8,.72));
-  border:1px solid rgba(255,255,255,.11);box-shadow:var(--shadow)}
+  background:linear-gradient(160deg,rgba(8,71,47,.5),rgba(3,26,18,.74));
+  border:1px solid rgba(217,172,78,.14);box-shadow:var(--shadow)}
 .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
   background:var(--kpi-accent,var(--ball-500))}
 .kpi-label{font-size:12px;letter-spacing:.09em;color:var(--ivory-dim);
@@ -280,10 +300,12 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .champ-card{display:flex;flex-direction:column;gap:6px;padding:10px 11px;border-radius:var(--radius-sm);
   background:rgba(0,0,0,.26);border:1px solid rgba(255,255,255,.09);
   transition:border-color .16s,transform .16s;cursor:pointer}
-.champ-card:hover{border-color:rgba(216,230,60,.45);transform:translateY(-2px)}
+.champ-card:hover{border-color:rgba(42,176,114,.5);transform:translateY(-2px)}
+/* 冠军名用金色：荣誉色只落在姓名上，不外溢到赛事与日期 */
+.champ-card .bi .bi-zh,.champ-card .bi .cn{color:var(--gold-300)}
 .champ-top{display:flex;align-items:center;gap:8px}
 .champ-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:0 0 auto;
-  background:var(--court-600);border:1.5px solid rgba(216,230,60,.5)}
+  background:var(--court-600);border:1.5px solid rgba(255,255,255,.22)}
 .champ-name{font-family:var(--font-cn);font-size:12.5px;font-weight:700;line-height:1.25;
   display:flex;flex-direction:column}
 .champ-name .en{font-family:var(--font-en);font-size:9.5px;letter-spacing:.03em;
@@ -307,7 +329,7 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .rr-ev{font-size:11px;color:var(--ivory-mute);font-family:var(--font-cn);
   display:flex;flex-wrap:wrap;align-items:baseline;gap:5px}
 .rr-ev .en{font-family:var(--font-en);font-size:9.5px;opacity:.55}
-.rr-score{font-family:var(--font-en);font-size:13px;font-weight:600;color:var(--ball-400);
+.rr-score{font-family:var(--font-en);font-size:13px;font-weight:600;color:var(--ivory);
   white-space:nowrap;letter-spacing:.02em}
 
 /* ══════════════════════════════════════════════════════ 迷你榜 */
@@ -364,12 +386,12 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
   background:rgba(0,0,0,.34);border:1px solid rgba(255,255,255,.1);
   font-size:13px;font-family:var(--font-cn);outline:none;transition:border-color .16s}
 .search-box input::placeholder{color:var(--ivory-mute)}
-.search-box input:focus{border-color:rgba(216,230,60,.5)}
+.search-box input:focus{border-color:rgba(42,176,114,.6)}
 
 .btn-more{display:block;width:100%;padding:13px;border-radius:0 0 var(--radius) var(--radius);
   background:rgba(0,0,0,.28);border-top:1px solid rgba(255,255,255,.07);
   color:var(--ivory-dim);font-family:var(--font-cn);font-size:13px;transition:background .16s,color .16s}
-.btn-more:hover{background:rgba(216,230,60,.1);color:var(--ball-400)}
+.btn-more:hover{background:rgba(42,176,114,.14);color:var(--grass-400)}
 
 /* ══════════════════════════════════════════════════════ 赛程时间线 */
 .timeline{display:flex;flex-direction:column}
@@ -391,7 +413,7 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .tl-winner{font-size:12px;font-family:var(--font-cn);display:flex;align-items:center;gap:6px}
 .tl-winner a:hover{color:var(--ball-400)}
 .tl-winner img{width:24px;height:24px;border-radius:50%;object-fit:cover;
-  background:var(--court-600);border:1px solid rgba(216,230,60,.42)}
+  background:var(--court-600);border:1px solid rgba(255,255,255,.2)}
 .tl-progress{width:92px;height:4px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
 .tl-progress i{display:block;height:100%;background:linear-gradient(90deg,var(--grass-500),var(--ball-500))}
 
@@ -400,11 +422,11 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
   border-radius:5px;font-size:11px;font-family:var(--font-ui);letter-spacing:.04em;
   border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.3);white-space:nowrap}
 .tag-lvl .cn,.badge .cn{font-family:var(--font-cn)}
-.tag-lvl.gs{border-color:rgba(216,230,60,.55);color:var(--ball-400);background:rgba(216,230,60,.1)}
-.tag-lvl.w1000{border-color:rgba(212,100,60,.55);color:var(--clay-400);background:rgba(212,100,60,.12)}
+.tag-lvl.gs{border-color:rgba(217,172,78,.6);color:var(--gold-300);background:rgba(217,172,78,.12)}
+.tag-lvl.w1000{border-color:rgba(204,78,14,.6);color:#e38045;background:rgba(204,78,14,.14)}
 .tag-lvl.w500{border-color:rgba(63,134,212,.5);color:var(--hard-400);background:rgba(63,134,212,.12)}
 .tag-lvl.w250{border-color:rgba(47,163,107,.5);color:var(--grass-400);background:rgba(47,163,107,.12)}
-.tag-lvl.finals{border-color:rgba(216,230,60,.6);color:#fff;background:rgba(216,230,60,.16)}
+.tag-lvl.finals{border-color:rgba(217,172,78,.6);color:#fff;background:rgba(217,172,78,.16)}
 .sfc{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;
   color:var(--ivory-dim);font-family:var(--font-ui);white-space:nowrap}
 .sfc .cn{font-family:var(--font-cn)}
@@ -440,19 +462,19 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .result-ev{font-size:11px;color:var(--ivory-mute);font-family:var(--font-cn);
   display:flex;flex-wrap:wrap;align-items:baseline;gap:7px}
 .result-ev .en{font-family:var(--font-en);font-size:9.5px;opacity:.55}
-.result-score{font-family:var(--font-en);font-size:13px;font-weight:600;color:var(--ball-400);
+.result-score{font-family:var(--font-en);font-size:13px;font-weight:600;color:var(--ivory);
   text-align:right;white-space:nowrap;letter-spacing:.02em}
 
 /* ══════════════════════════════════════════════════════ 排名 */
 .rank-podium{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
 .podium-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;
   padding:20px 14px 17px;border-radius:var(--radius);text-align:center;overflow:hidden;
-  background:linear-gradient(170deg,rgba(115,48,27,.72),rgba(42,15,8,.9));
-  border:1px solid rgba(255,255,255,.11);box-shadow:var(--shadow);cursor:pointer;
+  background:linear-gradient(170deg,rgba(8,71,47,.6),rgba(3,26,18,.9));
+  border:1px solid rgba(217,172,78,.16);box-shadow:var(--shadow);cursor:pointer;
   transition:transform .18s,border-color .18s}
-.podium-card:hover{transform:translateY(-3px);border-color:rgba(216,230,60,.5)}
-.podium-card.g1{border-color:rgba(216,230,60,.6);
-  background:linear-gradient(170deg,rgba(216,230,60,.2),rgba(60,23,13,.94))}
+.podium-card:hover{transform:translateY(-3px);border-color:rgba(42,176,114,.55)}
+.podium-card.g1{border-color:rgba(217,172,78,.6);
+  background:linear-gradient(170deg,rgba(217,172,78,.22),rgba(4,35,26,.94))}
 .podium-card.g2{border-color:rgba(200,206,214,.4)}
 .podium-card.g3{border-color:rgba(196,124,80,.42)}
 .podium-n{position:absolute;top:9px;left:12px;font-family:var(--font-en);font-weight:700;
@@ -461,7 +483,7 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .podium-card.g3 .podium-n{color:#c47c50}
 .podium-card img{width:76px;height:76px;border-radius:50%;object-fit:cover;
   background:var(--court-600);border:2px solid rgba(255,255,255,.2)}
-.podium-card.g1 img{border-color:rgba(216,230,60,.75)}
+.podium-card.g1 img{border-color:rgba(217,172,78,.75)}
 .podium-name{font-family:var(--font-cn);font-weight:900;font-size:16px;line-height:1.2;
   display:flex;flex-direction:column}
 .podium-name .en{font-family:var(--font-en);font-size:10px;letter-spacing:.06em;
@@ -481,7 +503,7 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .rank-table{width:100%;border-collapse:collapse;font-size:13px}
 .rank-table thead th{position:sticky;top:0;z-index:2;text-align:right;
-  background:rgba(42,15,8,.97);backdrop-filter:blur(8px);
+  background:rgba(3,26,18,.98);backdrop-filter:blur(8px);
   padding:10px 14px;font-family:var(--font-ui);font-size:11.5px;font-weight:500;
   letter-spacing:.08em;color:var(--ivory-mute);
   border-bottom:1px solid rgba(255,255,255,.14);white-space:nowrap}
@@ -494,9 +516,9 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .rank-table tbody td{padding:9px 14px;text-align:right;
   border-bottom:1px solid rgba(255,255,255,.045);vertical-align:middle}
 .rank-table tbody tr{transition:background .13s}
-.rank-table tbody tr:hover{background:rgba(216,230,60,.07)}
+.rank-table tbody tr:hover{background:rgba(42,176,114,.09)}
 .rank-table tbody tr.clickable{cursor:pointer}
-.rank-table tbody tr.top3 td:first-child{color:var(--ball-400);font-weight:700}
+.rank-table tbody tr.top3 td:first-child{color:var(--gold-500);font-weight:700}
 .c-pos{width:58px}
 .c-player{min-width:200px}
 .c-country{width:112px}
@@ -518,17 +540,17 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .tb-num{font-family:var(--font-en);font-weight:600}
 .move{font-family:var(--font-en);font-size:11.5px;font-weight:600}
 .move.up{color:var(--grass-400)}
-.move.down{color:var(--clay-400)}
+.move.down{color:#e88a94}
 .move.flat{color:var(--ivory-mute)}
 .spark{display:inline-block;vertical-align:middle}
 
 /* ══════════════════════════════════════════════════════ 球员卡 */
 .player-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(266px,1fr));gap:14px}
 .player-card{position:relative;padding:15px;border-radius:var(--radius);overflow:hidden;
-  background:linear-gradient(165deg,rgba(115,48,27,.66),rgba(42,15,8,.86));
-  border:1px solid rgba(255,255,255,.1);box-shadow:var(--shadow);cursor:pointer;
+  background:linear-gradient(165deg,rgba(6,51,36,.72),rgba(3,26,18,.88));
+  border:1px solid rgba(217,172,78,.13);box-shadow:var(--shadow);cursor:pointer;
   transition:transform .18s,border-color .18s}
-.player-card:hover{transform:translateY(-3px);border-color:rgba(216,230,60,.5)}
+.player-card:hover{transform:translateY(-3px);border-color:rgba(42,176,114,.6)}
 .player-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
   background:var(--pc-accent,var(--grass-500))}
 .pc-top{display:flex;align-items:center;gap:12px;margin-bottom:11px}
@@ -552,7 +574,7 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .pc-form i{width:17px;height:17px;border-radius:4px;display:grid;place-items:center;
   font-family:var(--font-en);font-size:9.5px;font-style:normal;font-weight:700}
 .pc-form i.w{background:rgba(47,163,107,.26);color:#7fe0a8;border:1px solid rgba(47,163,107,.5)}
-.pc-form i.l{background:rgba(212,100,60,.2);color:#f0a184;border:1px solid rgba(212,100,60,.42)}
+.pc-form i.l{background:rgba(200,16,46,.2);color:#f19aa5;border:1px solid rgba(200,16,46,.45)}
 .pc-serve{margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.07);
   display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--ivory-mute);font-family:var(--font-cn)}
 .pc-serve b{color:var(--ivory);font-family:var(--font-en);font-weight:600}
@@ -604,17 +626,17 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .h2h-pick label .cn{font-family:var(--font-cn);letter-spacing:.04em}
 .h2h-pick input{width:100%;padding:10px 13px;border-radius:9px;background:rgba(0,0,0,.34);
   border:1px solid rgba(255,255,255,.11);font-size:13.5px;font-family:var(--font-cn);outline:none}
-.h2h-pick input:focus{border-color:rgba(216,230,60,.55)}
+.h2h-pick input:focus{border-color:rgba(42,176,114,.6)}
 .h2h-vs{font-family:var(--font-en);font-weight:700;font-size:20px;color:var(--ball-400);
   padding-bottom:11px;letter-spacing:.06em}
 .h2h-suggest{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:30;
   max-height:300px;overflow-y:auto;padding:5px;border-radius:11px;
-  background:rgba(60,23,13,.99);border:1px solid rgba(255,255,255,.16);
+  background:rgba(4,35,26,.99);border:1px solid rgba(217,172,78,.28);
   box-shadow:var(--shadow-lg);backdrop-filter:blur(10px)}
 .h2h-suggest button{display:flex;align-items:center;gap:10px;width:100%;padding:7px 9px;
   border-radius:7px;text-align:left;font-family:var(--font-cn);font-size:13px;
   transition:background .13s}
-.h2h-suggest button:hover{background:rgba(216,230,60,.13)}
+.h2h-suggest button:hover{background:rgba(42,176,114,.16)}
 .h2h-suggest img{width:26px;height:26px;border-radius:50%;object-fit:cover;flex:0 0 auto;
   background:var(--court-600)}
 .h2h-suggest .sn{flex:1;min-width:0;display:flex;flex-direction:column}
@@ -629,7 +651,7 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .h2h-side{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
 .h2h-side img{width:80px;height:80px;border-radius:50%;object-fit:cover;
   background:var(--court-600);border:2px solid rgba(255,255,255,.18)}
-.h2h-side.lead img{border-color:var(--ball-500);box-shadow:0 0 0 3px rgba(216,230,60,.18)}
+.h2h-side.lead img{border-color:var(--ball-500);box-shadow:0 0 0 3px rgba(217,172,78,.18)}
 .h2h-side .cn{display:block;font-family:var(--font-cn);font-weight:700;font-size:16px}
 .h2h-side .en{display:block;font-family:var(--font-en);font-size:10px;letter-spacing:.1em;
   opacity:.6;margin-top:2px}
@@ -677,8 +699,8 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .modal{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:20px}
 .modal-backdrop{position:absolute;inset:0;background:rgba(3,10,16,.78);backdrop-filter:blur(4px)}
 .modal-box{position:relative;width:min(820px,100%);max-height:88vh;overflow-y:auto;
-  border-radius:var(--radius);border:1px solid rgba(216,230,60,.24);
-  background:linear-gradient(170deg,rgba(87,35,19,.99),rgba(42,15,8,.99));
+  border-radius:var(--radius);border:1px solid rgba(217,172,78,.24);
+  background:linear-gradient(170deg,rgba(6,51,36,.99),rgba(3,26,18,.99));
   box-shadow:var(--shadow-lg)}
 .modal-close{position:absolute;top:10px;right:12px;z-index:2;width:32px;height:32px;
   border-radius:50%;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.16);
@@ -687,7 +709,7 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .modal-body{padding:24px}
 .mp-head{display:flex;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap}
 .mp-head img{width:88px;height:88px;border-radius:50%;object-fit:cover;
-  background:var(--court-600);border:2px solid rgba(216,230,60,.42)}
+  background:var(--court-600);border:2px solid rgba(217,172,78,.42)}
 .mp-id{display:flex;flex-direction:column;gap:4px;min-width:0}
 .mp-id h3{font-family:var(--font-cn);font-weight:900;font-size:24px;line-height:1.15;
   display:flex;flex-direction:column}
@@ -715,7 +737,7 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 
 /* ══════════════════════════════════════════════════════ 页脚 */
 .site-footer{position:relative;z-index:1;margin-top:30px;
-  border-top:1px solid rgba(216,230,60,.16);background:rgba(4,12,19,.86)}
+  border-top:1px solid rgba(217,172,78,.16);background:rgba(4,12,19,.86)}
 .footer-inner{max-width:1360px;margin:0 auto;padding:26px 20px 30px}
 .footer-brand{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
 .footer-brand strong{font-family:var(--font-cn);font-size:14.5px;display:block}
@@ -748,7 +770,7 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-track{background:rgba(0,0,0,.24)}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:6px}
-::-webkit-scrollbar-thumb:hover{background:rgba(216,230,60,.4)}
+::-webkit-scrollbar-thumb:hover{background:rgba(217,172,78,.4)}
 
 /* ══════════════════════════════════════════════════════ 响应式 */
 @media(max-width:1100px){
@@ -829,10 +851,10 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
    赛事赛果（赛程面板 → 点击赛事 → 弹窗）
    ========================================================================== */
 .tl-item.clickable{cursor:pointer}
-.tl-item.clickable:hover{background:rgba(216,230,60,.08)}
+.tl-item.clickable:hover{background:rgba(42,176,114,.1)}
 .tl-item.clickable:focus-visible{outline:2px solid var(--ball-500);outline-offset:-2px}
 .tl-more{font-family:var(--font-ui);font-size:10.5px;letter-spacing:.05em;
-  color:var(--ball-400);white-space:nowrap}
+  color:var(--grass-400);white-space:nowrap}
 .tl-more .cn{font-family:var(--font-cn)}
 
 .ev-loading{padding:44px 20px;text-align:center;color:var(--ivory-mute);font-family:var(--font-cn)}
@@ -865,7 +887,7 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
   gap:10px;align-items:center;padding:8px 14px;
   border-bottom:1px solid rgba(255,255,255,.045);transition:background .13s}
 .ev-match:last-child{border-bottom:none}
-.ev-match:hover{background:rgba(216,230,60,.07)}
+.ev-match:hover{background:rgba(42,176,114,.09)}
 .ev-match.q{opacity:.86}
 .ev-side{display:flex;align-items:center;gap:7px;min-width:0}
 .ev-side.b{flex-direction:row-reverse;text-align:right}
@@ -874,12 +896,18 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .ev-nm .cn{font-weight:500}
 .ev-nm .en{font-family:var(--font-en);font-size:9.5px;opacity:.55;margin:0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ev-side.win .ev-nm .cn{font-weight:900;color:#fff}
-.ev-side.win .ev-nm .en{opacity:.8}
+.ev-side.win .ev-nm .cn{font-weight:900;color:var(--gold-400)}
+.ev-side.win .ev-nm .en{color:var(--gold-500);opacity:.9}
 .ev-side:not(.win) .ev-nm{color:var(--ivory-mute)}
+/* 胜者前加一枚小奖杯标记，金色是荣誉色而不是装饰色 */
+.ev-side.win::before{content:"🏆";font-size:11px;line-height:1;opacity:.95;flex:0 0 auto}
+.ev-side.b.win::after{content:"🏆";font-size:11px;line-height:1;opacity:.95;flex:0 0 auto}
+.ev-side.b.win::before{content:none}
+.ev-side.win{background:linear-gradient(90deg,rgba(217,172,78,.1),transparent 78%)}
+.ev-side.b.win{background:linear-gradient(270deg,rgba(217,172,78,.1),transparent 78%)}
 .ev-side.b.win{justify-content:flex-start}
 .ev-seed{font-family:var(--font-en);font-size:10px;color:var(--ball-400);
-  background:rgba(216,230,60,.12);border:1px solid rgba(216,230,60,.3);
+  background:rgba(217,172,78,.12);border:1px solid rgba(217,172,78,.3);
   border-radius:4px;padding:0 4px;flex:0 0 auto}
 .ev-side .flag{flex:0 0 auto}
 .ev-score{font-family:var(--font-en);font-size:12.5px;font-weight:600;
