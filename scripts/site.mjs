@@ -28,7 +28,8 @@ await mkdir(resolve(OUT, 'data'), { recursive: true });
 // `h2h.json` is kept in the repository for transparency and for anyone
 // consuming the snapshots directly, but the browser reads the bundled
 // `assets/h2h-data.js` instead — no point shipping the same 3.6 MB twice.
-const SITE_EXCLUDED = new Set(['h2h.json']);
+// Build-only artefacts that the browser never requests.
+const SITE_EXCLUDED = new Set(['h2h.json', 'zh-variant-cache.json']);
 const dataFiles = (await readdir(DATA_DIR)).filter(
   (f) => f.endsWith('.json') && !SITE_EXCLUDED.has(f),
 );

@@ -5,14 +5,17 @@
 import { rankings } from '../data.js';
 import {
   attachSort,
+  countryName,
   hbars,
   lineChart,
   loading,
   movement,
+  pair,
   pageHead,
   playerCell,
 } from '../ui.js';
-import { country, dateLabel, esc, int } from '../utils.js';
+import { countryZh, playerZh } from '../i18n.js';
+import { dateLabel, esc, int } from '../utils.js';
 import { setTitle } from '../app.js';
 
 export const skeleton = () => loading(12);
@@ -77,35 +80,38 @@ export async function render(host) {
 
   host.innerHTML = `
   ${pageHead({
-    eyebrow: 'PIF WTA Rankings · Singles',
-    title: 'Official singles ranking',
-    sub: `As published by the WTA for the week of <b>${esc(
+    eyebrow: 'PIF WTA Rankings · 官方单打排名',
+    title: pair('官方单打排名', 'Official singles ranking'),
+    sub: `WTA 官方发布的 <b>${esc(
       dateLabel(rank.asOf),
-    )}</b>. ${int(all.length)} ranked players, with movement against the previous published week.`,
-    actions: `<a class="btn" href="https://www.wtatennis.com/rankings/singles" target="_blank" rel="noopener">Source ↗</a>`,
+    )}</b> 当周榜单，共 ${int(all.length)} 位球员，名次变动与官方公布的上周排名对比。<br>
+    <span style="opacity:.7;font-size:13px">As published by the WTA for the week of ${esc(
+      dateLabel(rank.asOf),
+    )}, with movement against the previous published week.</span>`,
+    actions: `<a class="btn" href="https://www.wtatennis.com/rankings/singles" target="_blank" rel="noopener">官方来源 ↗</a>`,
   })}
 
   <div class="grid c3 mb4" style="margin-bottom:var(--sp-6)">
-    ${statCard('Ranking points', int(all[0].points), `${esc(all[0].name)} · No.1`)}
-    ${statCard('Points, world No.10', int(all[9]?.points), `${esc(all[9]?.name || '')}`)}
-    ${statCard('Top-100 cut-off', int(all[99]?.points), `${esc(all[99]?.name || '')}`)}
+    ${statCard(pair('世界第一积分', 'Ranking points'), int(all[0].points), pair(playerZh(all[0].id), all[0].name) + ' · No.1')}
+    ${statCard(pair('第十名积分', 'Points, world No.10'), int(all[9]?.points), pair(playerZh(all[9]?.id), all[9]?.name || ''))}
+    ${statCard(pair('前 100 门槛积分', 'Top-100 cut-off'), int(all[99]?.points), pair(playerZh(all[99]?.id), all[99]?.name || ''))}
   </div>
 
   <div class="grid c2" style="margin-bottom:var(--sp-6)">
     <div class="card">
-      <div class="card-hd"><div><span class="eyebrow">Rankings curve</span>
-        <h3>Ranking points by position, top 100</h3></div></div>
+      <div class="card-hd"><div><span class="eyebrow">Rankings curve · 积分曲线</span>
+        <h3>${pair('前 100 名各位置积分', 'Ranking points by position, top 100')}</h3></div></div>
       <div class="card-bd">
         ${lineChart({ points: curve, height: 200, area: true, fmt: (v) => int(v) })}
         <p class="dim mt3" style="font-size:12px;margin-bottom:0">
-          The 52-week rolling points total available at each position. The gap
-          between No.1 and the chasing pack is the tour's most-watched number.
+          每个名次对应的 52 周滚动积分。世界第一与追赶者之间的差距，是巡回赛最受关注的数字。
+          <span style="opacity:.7">The 52-week rolling points total available at each position.</span>
         </p>
       </div>
     </div>
     <div class="card">
-      <div class="card-hd"><div><span class="eyebrow">Average points by band</span>
-        <h3>Depth of the draw</h3></div></div>
+      <div class="card-hd"><div><span class="eyebrow">Average points by band · 分段均分</span>
+        <h3>${pair('排名深度分布', 'Depth of the draw')}</h3></div></div>
       <div class="card-bd">
         ${hbars(bands, { suffix: '', digits: 0 })}
       </div>
@@ -114,21 +120,22 @@ export async function render(host) {
 
   <div class="grid c3" style="margin-bottom:var(--sp-6)">
     <div class="card">
-      <div class="card-hd"><div><span class="eyebrow">Top 100</span><h3>National depth</h3></div></div>
+      <div class="card-hd"><div><span class="eyebrow">Top 100 · 前一百</span><h3>${pair('国家/地区分布', 'National depth')}</h3></div></div>
       <div class="card-bd flush">
         ${countryRows
           .map(
             (r, i) => `<div class="lb-row">
               <span class="lb-i">${i + 1}</span>
-              <span class="lb-n"><span class="flag">${esc(r.label)}</span></span>
-              <span class="lb-v">${r.value} <span class="dim" style="font-size:10px">players</span></span>
+              <span class="lb-n"><span class="flag">${esc(r.label)}</span>
+                <span style="margin-left:7px;font-size:12.5px">${esc(countryZh(r.label))}</span></span>
+              <span class="lb-v">${r.value} <span class="dim" style="font-size:10px">${pair('人', 'players')}</span></span>
             </div>`,
           )
           .join('')}
       </div>
     </div>
     <div class="card">
-      <div class="card-hd"><div><span class="eyebrow">Biggest climbers</span><h3>Moving up</h3></div></div>
+      <div class="card-hd"><div><span class="eyebrow">Biggest climbers · 上升</span><h3>${pair('名次上升最多', 'Moving up')}</h3></div></div>
       <div class="card-bd flush">
         ${movers
           .map(
@@ -138,11 +145,11 @@ export async function render(host) {
               <span class="lb-v">${movement(p.move)}</span>
             </div>`,
           )
-          .join('') || '<div class="empty">No upward movement this week</div>'}
+          .join('') || `<div class="empty">${pair('本周没有上升的球员', 'No upward movement this week')}</div>`}
       </div>
     </div>
     <div class="card">
-      <div class="card-hd"><div><span class="eyebrow">Biggest slides</span><h3>Moving down</h3></div></div>
+      <div class="card-hd"><div><span class="eyebrow">Biggest slides · 下降</span><h3>${pair('名次下降最多', 'Moving down')}</h3></div></div>
       <div class="card-bd flush">
         ${fallers
           .map(
@@ -152,21 +159,23 @@ export async function render(host) {
               <span class="lb-v">${movement(p.move)}</span>
             </div>`,
           )
-          .join('') || '<div class="empty">No downward movement this week</div>'}
+          .join('') || `<div class="empty">${pair('本周没有下降的球员', 'No downward movement this week')}</div>`}
       </div>
     </div>
   </div>
 
   <section>
     <div class="sec-hd" style="align-items:center">
-      <div><span class="eyebrow">Complete table</span><h2 style="font-size:20px">Singles ranking</h2></div>
+      <div><span class="eyebrow">Complete table · 完整榜单</span><h2 style="font-size:20px">${pair('单打排名', 'Singles ranking')}</h2></div>
       <div class="row wrap" style="gap:10px">
-        <input type="search" data-q placeholder="Filter by name…" aria-label="Filter players"
+        <input type="search" data-q placeholder="${pair('按姓名筛选…', 'Filter by name…')}" aria-label="Filter players"
           style="padding:7px 11px;background:var(--panel);border:1px solid var(--line);border-radius:3px;font-size:13px;outline:none;width:170px">
         <select data-country aria-label="Filter by country"
           style="padding:7px 11px;background:var(--panel);border:1px solid var(--line);border-radius:3px;font-size:13px;outline:none">
-          <option value="">All countries</option>
-          ${countries.map((c) => `<option value="${esc(c)}">${esc(c)}</option>`).join('')}
+          <option value="">${pair('全部国家/地区', 'All countries')}</option>
+          ${countries
+            .map((c) => `<option value="${esc(c)}">${esc(countryZh(c) ? `${countryZh(c)} (${c})` : c)}</option>`)
+            .join('')}
         </select>
       </div>
     </div>
@@ -175,12 +184,12 @@ export async function render(host) {
         <table class="tbl" data-table>
           <thead>
             <tr>
-              <th class="l" data-key="rank" style="width:60px">Rank</th>
-              <th class="l" data-key="name">Player</th>
-              <th class="c" data-key="country">Country</th>
-              <th data-key="move">Move</th>
-              <th data-key="played" data-first="desc" class="hide-sm">Events</th>
-              <th data-key="points" data-first="desc">Points</th>
+              <th class="l" data-key="rank" style="width:64px">${pair('排名', 'Rank')}</th>
+              <th class="l" data-key="name">${pair('球员', 'Player')}</th>
+              <th class="c" data-key="country">${pair('国家/地区', 'Country')}</th>
+              <th data-key="move">${pair('变动', 'Move')}</th>
+              <th data-key="played" data-first="desc" class="hide-sm">${pair('参赛', 'Events')}</th>
+              <th data-key="points" data-first="desc">${pair('积分', 'Points')}</th>
             </tr>
           </thead>
           <tbody data-body></tbody>
@@ -188,7 +197,7 @@ export async function render(host) {
       </div>
       <div class="card-bd row between" data-foot style="border-top:1px solid var(--line-soft)">
         <span class="dim" data-count></span>
-        <button class="btn" data-more>Show 100 more</button>
+        <button class="btn" data-more>${pair('再显示 100 位', 'Show 100 more')}</button>
       </div>
     </div>
   </section>
@@ -213,7 +222,13 @@ export async function render(host) {
   function filtered() {
     const q = query.trim().toUpperCase();
     let rows = all;
-    if (q) rows = rows.filter((p) => p.name.toUpperCase().includes(q));
+    if (q) {
+      rows = rows.filter(
+        (p) =>
+          p.name.toUpperCase().includes(q) ||
+          (playerZh(p.id) || '').includes(query.trim()),
+      );
+    }
     if (countryFilter) rows = rows.filter((p) => p.country === countryFilter);
 
     const col = COLUMNS[sortKey] || COLUMNS.rank;
@@ -237,7 +252,7 @@ export async function render(host) {
         (p) => `<tr class="clickable ${p.rank <= 3 ? 'top3' : ''}" data-href="#/player/${p.id}">
           <td class="l rank-cell ${p.rank <= 3 ? 'top' : ''}">${p.rank}</td>
           <td class="l">${playerCell(p, { size: 32 })}</td>
-          <td class="c">${country(p.country)}</td>
+          <td class="c">${countryName(p.country)}</td>
           <td>${movement(p.move)}</td>
           <td class="hide-sm num dim">${p.played ?? '—'}</td>
           <td class="num">${int(p.points)}</td>
@@ -245,7 +260,10 @@ export async function render(host) {
       )
       .join('') || `<tr><td colspan="6"><div class="empty">No players match this filter</div></td></tr>`;
 
-    countEl.textContent = `Showing ${shown.length} of ${matching.length} players`;
+    countEl.innerHTML = pair(
+      `显示 ${shown.length} / ${matching.length} 位球员`,
+      `Showing ${shown.length} of ${matching.length} players`,
+    );
     moreBtn.style.display = matching.length > shown.length ? '' : 'none';
 
     body.querySelectorAll('tr[data-href]').forEach((tr) => {
@@ -292,12 +310,12 @@ export async function render(host) {
   paint();
 }
 
-function statCard(label, value, sub) {
+function statCard(labelHtml, value, subHtml) {
   return `<div class="card"><div class="card-bd">
-    <div class="eyebrow">${esc(label)}</div>
+    <div class="eyebrow">${labelHtml}</div>
     <b class="num" style="display:block;font-size:30px;font-weight:500;letter-spacing:-0.035em;margin-top:4px">${esc(
       value,
     )}</b>
-    <div class="dim" style="font-size:12.5px">${esc(sub)}</div>
+    <div class="dim" style="font-size:12.5px">${subHtml}</div>
   </div></div>`;
 }

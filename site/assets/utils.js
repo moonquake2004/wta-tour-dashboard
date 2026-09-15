@@ -109,21 +109,6 @@ export function country(code) {
   return `<span class="flag">${esc(code)}</span>`;
 }
 
-/** Level → tag class. */
-export function levelTag(level) {
-  if (!level) return '';
-  const l = String(level);
-  let cls = '';
-  if (/grand slam/i.test(l)) cls = 'gs';
-  else if (/1000/i.test(l)) cls = 'w1000';
-  else if (/500/i.test(l)) cls = 'w500';
-  else if (/250|125/i.test(l)) cls = 'w250';
-  const short = l
-    .replace(/^WTA\s*/i, '')
-    .replace(/^Grand Slam$/i, 'SLAM');
-  return `<span class="tag ${cls}">${esc(short || l)}</span>`;
-}
-
 const SURFACE_LABEL = {
   HARD: 'Hard',
   CLAY: 'Clay',
@@ -135,12 +120,6 @@ export function surfaceLabel(raw) {
   if (!raw) return '—';
   const key = String(raw).toUpperCase();
   return SURFACE_LABEL[key] || titleCase(raw);
-}
-
-export function surfaceChip(raw) {
-  const label = surfaceLabel(raw);
-  const key = titleCase(label);
-  return `<span class="sfc ${esc(key)}"><i></i>${esc(label)}</span>`;
 }
 
 export function titleCase(s) {
@@ -196,4 +175,27 @@ export function errorState(message, detail = '') {
     ${detail ? `<div class="dim mt3" style="font-size:12px">${esc(detail)}</div>` : ''}
     <div class="mt4"><button class="btn" onclick="location.reload()">Retry</button></div>
   </div>`;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* Bilingual vocabulary (structured, not prose)                        */
+/* ------------------------------------------------------------------ */
+
+const HAND_ZH = { 'Right-Handed': '右手持拍', 'Left-Handed': '左手持拍' };
+const BACKHAND_ZH = { 'One-Handed': '单反', 'Two-Handed': '双反' };
+const STATUS_ZH = { Pro: '职业球员', 'Pro (retired)': '职业球员（已退役）' };
+
+export const handZh = (v) => HAND_ZH[String(v || '').trim()] || '';
+export const backhandZh = (v) => BACKHAND_ZH[String(v || '').trim()] || '';
+export const statusZh = (v) => STATUS_ZH[String(v || '').trim()] || '';
+
+/** "R16" → "16 强"; delegates to the snapshot when available. */
+export function roundLabel(round) {
+  const r = String(round || '').toUpperCase();
+  const map = {
+    F: '决赛', SF: '半决赛', QF: '四分之一决赛', Q: '四分之一决赛', S: '半决赛',
+    R16: '16 强', R32: '32 强', R64: '64 强', R128: '128 强', RR: '小组赛',
+  };
+  return map[r] || '';
 }

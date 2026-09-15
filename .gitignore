@@ -13,6 +13,9 @@ pnpm-debug.log*
 *.swp
 *~
 
+# Chinese variant-conversion cache (regenerated on demand)
+data/zh-variant-cache.json
+
 # Local scratch
 tmp/
 .cache/

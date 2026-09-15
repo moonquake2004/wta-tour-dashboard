@@ -13,19 +13,37 @@ import {
   rankingHistory,
   seasonStats,
 } from '../data.js';
-import { avatar, formStrip, lineChart, loading, tiles } from '../ui.js';
 import {
-  country,
+  avatar,
+  countryName,
+  formStrip,
+  lineChart,
+  loading,
+  pair,
+  tiles,
+  levelTag,
+  surfaceChip,
+} from '../ui.js';
+import {
+  countryZh,
+  playerZh,
+  roundName,
+  surfaceName,
+  surfaceZh,
+  tournamentZh,
+} from '../i18n.js';
+import {
+  backhandZh,
   dateLabel,
   esc,
+  handZh,
   heightLabel,
   int,
-  levelTag,
   money,
   monthDay,
   pct,
   record,
-  surfaceChip,
+  statusZh,
   surfaceLabel,
   winPct,
 } from '../utils.js';
@@ -46,9 +64,12 @@ export async function render(host, { id }) {
 
   const p = rank.players.find((x) => x.id === id);
   if (!p) {
-    host.innerHTML = `<div class="empty"><b>Player not found</b>
-      <div>No player with id ${esc(id)} appears in the current ranking snapshot.</div>
-      <div class="mt4"><a class="btn" href="#/rankings">Back to rankings</a></div></div>`;
+    host.innerHTML = `<div class="empty"><b>${pair('未找到该球员', 'Player not found')}</b>
+      <div>${pair(
+        `当前排名快照中没有编号为 ${esc(id)} 的球员。`,
+        `No player with id ${esc(id)} appears in the current ranking snapshot.`,
+      )}</div>
+      <div class="mt4"><a class="btn" href="#/rankings">${pair('返回排名', 'Back to rankings')}</a></div></div>`;
     return;
   }
 
@@ -136,16 +157,16 @@ export async function render(host, { id }) {
     return vals.length ? vals.reduce((n, v) => n + v, 0) / vals.length : null;
   };
   const serveMetrics = [
-    ['Aces', 'aces', (v) => int(v), false],
-    ['First serve in', 'firstServePct', (v) => pct(v), true],
-    ['1st serve points won', 'firstServeWonPct', (v) => pct(v), true],
-    ['2nd serve points won', 'secondServeWonPct', (v) => pct(v), true],
-    ['Service games won', 'serviceGamesWonPct', (v) => pct(v), true],
-    ['Break points saved', 'breakPointsSavedPct', (v) => pct(v), true],
-    ['Return games won', 'returnGamesWonPct', (v) => pct(v), true],
-    ['Return points won', 'returnPointsWonPct', (v) => pct(v), true],
-    ['Break points converted', 'breakPointsConvertedPct', (v) => pct(v), true],
-    ['Total points won', 'totalPointsWonPct', (v) => pct(v), true],
+    [pair('ACE 球', 'Aces'), 'aces', (v) => int(v), false],
+    [pair('一发成功率', 'First serve in'), 'firstServePct', (v) => pct(v), true],
+    [pair('一发得分率', '1st serve points won'), 'firstServeWonPct', (v) => pct(v), true],
+    [pair('二发得分率', '2nd serve points won'), 'secondServeWonPct', (v) => pct(v), true],
+    [pair('发球局胜率', 'Service games won'), 'serviceGamesWonPct', (v) => pct(v), true],
+    [pair('破发点挽救率', 'Break points saved'), 'breakPointsSavedPct', (v) => pct(v), true],
+    [pair('接发局胜率', 'Return games won'), 'returnGamesWonPct', (v) => pct(v), true],
+    [pair('接发得分率', 'Return points won'), 'returnPointsWonPct', (v) => pct(v), true],
+    [pair('破发点转化率', 'Break points converted'), 'breakPointsConvertedPct', (v) => pct(v), true],
+    [pair('总得分率', 'Total points won'), 'totalPointsWonPct', (v) => pct(v), true],
   ];
 
   const rankBoard = boards.boards.find((x) => x.key === 'serviceGamesWonPct');
@@ -158,93 +179,97 @@ export async function render(host, { id }) {
     <div class="profile-hd">
       ${avatar(id, p.name, 132, 'profile-photo')}
       <div>
-        <span class="eyebrow">${esc(b.countryName || p.country)} · ${
-          b.status ? esc(b.status) : 'Professional'
+        <span class="eyebrow">${esc(countryZh(p.country) || b.countryName || p.country)} · ${
+          b.status ? esc(statusZh(b.status) || b.status) : pair('职业球员', 'Professional')
         }</span>
-        <h1 class="profile-name">${esc(p.name)}</h1>
+        <h1 class="profile-name">${pair(playerZh(id), p.name)}</h1>
         <div class="profile-flags">
-          ${country(p.country)}
-          <span>World No.${p.rank}</span>
-          ${b.sglHighRank ? `<span class="dim">·</span><span class="dim">Career high No.${b.sglHighRank}</span>` : ''}
+          ${countryName(p.country)}
+          <span>${pair(`世界第 ${p.rank}`, `World No.${p.rank}`)}</span>
+          ${b.sglHighRank ? `<span class="dim">·</span><span class="dim">${pair('最高排名', 'Career high')} No.${b.sglHighRank}</span>` : ''}
           ${p.move ? `<span class="dim">·</span><span class="${
             p.move > 0 ? 'up' : 'down'
           }">${p.move > 0 ? '▲' : '▼'} ${Math.abs(p.move)} this week</span>` : ''}
         </div>
         <div class="row wrap mt4" style="gap:8px">
-          <a class="btn primary" href="#/compare?a=${id}">Compare player</a>
-          <a class="btn" href="#/rankings">Back to rankings</a>
+          <a class="btn primary" href="#/compare?a=${id}">${pair('对比球员', 'Compare player')}</a>
+          <a class="btn" href="#/rankings">${pair('返回排名', 'Back to rankings')}</a>
         </div>
       </div>
       <div class="profile-rank-badge">
         <b>${p.rank}</b>
-        <span>Singles rank</span>
-        <div class="num mt3" style="font-size:13px;color:var(--text-2)">${int(p.points)} pts</div>
+        <span>${pair('单打排名', 'Singles rank')}</span>
+        <div class="num mt3" style="font-size:13px;color:var(--text-2)">${int(p.points)} ${pair('积分', 'pts')}</div>
       </div>
     </div>
   </div>
 
   <section class="sec" style="margin-top:var(--sp-6)">
     ${tiles([
-      { value: rec ? record(rec.w, rec.l) : '—', label: `${seasonYear} W–L`, sub: rec ? `${pct(winPct(rec.w, rec.l))} won` : '' },
-      { value: int(b.sglCareerTitles), label: 'Career titles' },
-      { value: b.sglCareerWon != null ? record(b.sglCareerWon, b.sglCareerLost) : '—', label: 'Career W–L', sub: winP ? `${pct(winP)} won` : '' },
-      { value: b.age ?? '—', label: 'Age' },
-      { value: heightLabel(b.height) || '—', label: 'Height' },
-      { value: int(s.aces), label: `${seasonYear} aces` },
+      { value: rec ? record(rec.w, rec.l) : '—', label: `${seasonYear} ${pair('胜负', 'W–L')}`, sub: rec ? `${pct(winPct(rec.w, rec.l))} ${pair('胜率', 'won')}` : '' },
+      { value: int(b.sglCareerTitles), label: pair('生涯冠军', 'Career titles') },
+      { value: b.sglCareerWon != null ? record(b.sglCareerWon, b.sglCareerLost) : '—', label: pair('生涯胜负', 'Career W–L'), sub: winP ? `${pct(winP)} ${pair('胜率', 'won')}` : '' },
+      { value: b.age ?? '—', label: pair('年龄', 'Age') },
+      { value: heightLabel(b.height) || '—', label: pair('身高', 'Height') },
+      { value: int(s.aces), label: `${seasonYear} ${pair('ACE 球', 'aces')}` },
     ])}
   </section>
 
   <section class="sec">
     <div class="tabs" data-tabs>
-      <button class="on" data-tab="overview">Overview</button>
-      <button data-tab="results">Results</button>
-      <button data-tab="stats">Statistics</button>
-      <button data-tab="ranking">Ranking history</button>
-      ${log.length ? `<button data-tab="log">Match log</button>` : ''}
+      <button class="on" data-tab="overview">${pair('概览', 'Overview')}</button>
+      <button data-tab="results">${pair('战绩', 'Results')}</button>
+      <button data-tab="stats">${pair('统计', 'Statistics')}</button>
+      <button data-tab="ranking">${pair('排名历史', 'Ranking history')}</button>
+      ${log.length ? `<button data-tab="log">${pair('比赛记录', 'Match log')}</button>` : ''}
     </div>
 
     <div data-panel="overview" class="mt5">
       <div class="grid c2">
         <div class="card">
-          <div class="card-hd"><h3>Biography</h3></div>
+          <div class="card-hd"><h3>${pair('球员档案', 'Biography')}</h3></div>
           <div class="card-bd">
             <dl class="dl">
-              ${row('Born', b.birth ? `${dateLabel(b.birth)}${b.birthCity ? ` · ${esc(b.birthCity)}` : ''}` : '—')}
-              ${row('Country', esc(b.countryName || p.country || '—'))}
-              ${row('Plays', esc([b.hand, b.backhand && b.backhand !== 'N/A' ? `${b.backhand} backhand` : ''].filter(Boolean).join(' · ') || '—'))}
-              ${row('Height', esc(heightLabel(b.height) || '—'))}
-              ${row('Career high', b.sglHighRank ? `No.${b.sglHighRank}${b.sglHighDate ? ` · ${dateLabel(b.sglHighDate)}` : ''}` : '—')}
-              ${row('Ranking points', `${int(p.points)} <span class="dim" style="font-size:11.5px">as of ${dateLabel(rank.asOf)}</span>`)}
-              ${row('Doubles rank', b.dblRank ? `No.${b.dblRank}` : '—')}
-              ${row('Career prize money', b.careerPrize ? money(b.careerPrize) : '—')}
-              ${row(`${seasonYear} prize money`, b.ytdPrize ? money(b.ytdPrize) : '—')}
+              ${row(pair('出生', 'Born'), b.birth ? `${dateLabel(b.birth)}${b.birthCity ? ` · ${esc(b.birthCity)}` : ''}` : '—')}
+              ${row(pair('国家/地区', 'Country'), esc(b.countryName || p.country || '—'))}
+              ${row(pair('持拍', 'Plays'), esc([handZh(b.hand) || b.hand, backhandZh(b.backhand) || (b.backhand && b.backhand !== 'N/A' ? `${b.backhand} backhand` : '')].filter(Boolean).join(' · ') || '—'))}
+              ${row(pair('身高', 'Height'), esc(heightLabel(b.height) || '—'))}
+              ${row(pair('最高排名', 'Career high'), b.sglHighRank ? `No.${b.sglHighRank}${b.sglHighDate ? ` · ${dateLabel(b.sglHighDate)}` : ''}` : '—')}
+              ${row(pair('排名积分', 'Ranking points'), `${int(p.points)} <span class="dim" style="font-size:11.5px">${pair('截至', 'as of')} ${dateLabel(rank.asOf)}</span>`)}
+              ${row(pair('双打排名', 'Doubles rank'), b.dblRank ? `No.${b.dblRank}` : '—')}
+              ${row(pair('生涯奖金', 'Career prize money'), b.careerPrize ? money(b.careerPrize) : '—')}
+              ${row(pair(`${seasonYear} 赛季奖金`, `${seasonYear} prize money`), b.ytdPrize ? money(b.ytdPrize) : '—')}
             </dl>
             ${
               b.personal
-                ? `<div class="mt5"><div class="eyebrow mb3" style="margin-bottom:8px">Personal</div>
-                   <div class="prose">${esc(b.personal)}</div></div>`
+                ? `<div class="mt5"><div class="eyebrow mb3" style="margin-bottom:8px">${pair('个人简介', 'Personal')}</div>
+                   <div class="prose" lang="en">${esc(b.personal)}</div></div>`
                 : ''
             }
             <div class="dim mt5" style="font-size:11.5px">
-              Biography record updated by the WTA ${
+              ${pair('WTA 官方档案最后更新：', 'Biography record updated by the WTA: ')}${
                 b.bioUpdated ? dateLabel(b.bioUpdated) : '—'
-              }.
+              }。<br>
+              ${pair(
+                '档案与赛况文字由 WTA 以英文发布，此处保留原文。',
+                'Biographical and season prose is published by the WTA in English and is reproduced in its original language.',
+              )}
             </div>
           </div>
         </div>
 
         <div>
           <div class="card">
-            <div class="card-hd"><h3>Recent form</h3>
-              <span class="dim" style="font-size:11.5px">newest first</span></div>
+            <div class="card-hd"><h3>${pair('近期战绩', 'Recent form')}</h3>
+              <span class="dim" style="font-size:11.5px">${pair('最新在前', 'newest first')}</span></div>
             <div class="card-bd">
               ${formStrip(rec?.last10 || currentMatches.slice(0, 10).map((m) => m.w), 10)}
               ${
                 rec
                   ? `<div class="mt4 row" style="gap:var(--sp-5);flex-wrap:wrap">
-                      <div><div class="eyebrow">Season</div><b class="num" style="font-size:17px">${record(rec.w, rec.l)}</b></div>
-                      <div><div class="eyebrow">Titles</div><b class="num" style="font-size:17px">${rec.titles}</b></div>
-                      <div><div class="eyebrow">Finals</div><b class="num" style="font-size:17px">${rec.finals}</b></div>
+                      <div><div class="eyebrow">${pair('赛季', 'Season')}</div><b class="num" style="font-size:17px">${record(rec.w, rec.l)}</b></div>
+                      <div><div class="eyebrow">${pair('冠军', 'Titles')}</div><b class="num" style="font-size:17px">${rec.titles}</b></div>
+                      <div><div class="eyebrow">${pair('决赛', 'Finals')}</div><b class="num" style="font-size:17px">${rec.finals}</b></div>
                     </div>`
                   : ''
               }
@@ -254,8 +279,9 @@ export async function render(host, { id }) {
           ${
             b.highlights
               ? `<div class="card mt5">
-                  <div class="card-hd"><h3>Career highlights</h3></div>
-                  <div class="card-bd"><div class="prose" style="max-height:320px;overflow-y:auto">${esc(
+                  <div class="card-hd"><h3>${pair('生涯亮点', 'Career highlights')}</h3>
+                    <span class="dim" style="font-size:11.5px">${pair('WTA 英文原文', 'WTA original text')}</span></div>
+                  <div class="card-bd"><div class="prose" lang="en" style="max-height:320px;overflow-y:auto">${esc(
                     b.highlights,
                   )}</div></div>
                 </div>`
@@ -265,8 +291,9 @@ export async function render(host, { id }) {
           ${
             b.yearDetail
               ? `<div class="card mt5">
-                  <div class="card-hd"><h3>${seasonYear} in review</h3></div>
-                  <div class="card-bd"><div class="prose">${esc(b.yearDetail)}</div></div>
+                  <div class="card-hd"><h3>${pair(`${seasonYear} 赛季回顾`, `${seasonYear} in review`)}</h3>
+                    <span class="dim" style="font-size:11.5px">${pair('WTA 英文原文', 'WTA original text')}</span></div>
+                  <div class="card-bd"><div class="prose" lang="en">${esc(b.yearDetail)}</div></div>
                 </div>`
               : ''
           }
@@ -277,9 +304,9 @@ export async function render(host, { id }) {
         rivals.length
           ? `<div class="card mt5">
               <div class="card-hd">
-                <div><span class="eyebrow">Head-to-head</span>
-                  <h3>Record against the current top 30</h3></div>
-                <span class="dim" style="font-size:11.5px">stored meetings, 2023–present</span>
+                <div><span class="eyebrow">Head-to-head · 交手</span>
+                  <h3>${pair('对现役前 30 的战绩', 'Record against the current top 30')}</h3></div>
+                <span class="dim" style="font-size:11.5px">${pair('已存交手，2023 年至今', 'stored meetings, 2023–present')}</span>
               </div>
               <div class="card-bd flush">
                 <div class="rivals">
@@ -287,7 +314,7 @@ export async function render(host, { id }) {
                     .map(
                       (r) => `<a class="rival" href="#/compare/${id}/${r.id}">
                         ${avatar(r.id, r.name, 34)}
-                        <span class="r-name">${esc(r.name)}</span>
+                        <span class="r-name">${pair(playerZh(r.id), r.name)}</span>
                         <span class="flag">${esc(r.country || '')}</span>
                         <span class="num dim r-rank">${r.rank ? `No.${r.rank}` : ''}</span>
                         <span class="r-rec ${r.wins > r.losses ? 'lead' : r.wins < r.losses ? 'trail' : ''}">
@@ -306,7 +333,7 @@ export async function render(host, { id }) {
     <div data-panel="results" class="mt5" hidden>
       <div class="grid c2">
         <div class="card">
-          <div class="card-hd"><h3>Record by surface</h3><span class="dim" style="font-size:11.5px">since 2023</span></div>
+          <div class="card-hd"><h3>${pair('按场地分类战绩', 'Record by surface')}</h3><span class="dim" style="font-size:11.5px">${pair('2023 年至今', 'since 2023')}</span></div>
           <div class="card-bd flush">
             ${
               surfaceSplits.length
@@ -319,12 +346,12 @@ export async function render(host, { id }) {
                       </div>`,
                     )
                     .join('')
-                : '<div class="empty">No match log stored for this player</div>'
+                : `<div class="empty">${pair('未存储该球员的比赛记录', 'No match log stored for this player')}</div>`
             }
           </div>
         </div>
         <div class="card">
-          <div class="card-hd"><h3>Record by tournament level</h3><span class="dim" style="font-size:11.5px">since 2023</span></div>
+          <div class="card-hd"><h3>${pair('按赛事级别分类战绩', 'Record by tournament level')}</h3><span class="dim" style="font-size:11.5px">${pair('2023 年至今', 'since 2023')}</span></div>
           <div class="card-bd flush">
             ${
               levelSplits.length
@@ -337,7 +364,7 @@ export async function render(host, { id }) {
                       </div>`,
                     )
                     .join('')
-                : '<div class="empty">No match log stored for this player</div>'
+                : `<div class="empty">${pair('未存储该球员的比赛记录', 'No match log stored for this player')}</div>`
             }
           </div>
         </div>
@@ -346,13 +373,13 @@ export async function render(host, { id }) {
       ${
         years.length
           ? `<div class="card mt5">
-              <div class="card-hd"><h3>Season summaries</h3></div>
+              <div class="card-hd"><h3>${pair('各赛季汇总', 'Season summaries')}</h3></div>
               <div class="tbl-wrap">
                 <table class="tbl">
                   <thead><tr>
-                    <th class="l">Season</th><th>Matches</th><th>W</th><th>L</th>
-                    <th>Win %</th><th>Titles</th><th>Finals</th>
-                    <th class="l hide-sm">Best surface</th>
+                    <th class="l">${pair('赛季', 'Season')}</th><th>${pair('场次', 'Matches')}</th><th>${pair('胜', 'W')}</th><th>${pair('负', 'L')}</th>
+                    <th>${pair('胜率', 'Win %')}</th><th>${pair('冠军', 'Titles')}</th><th>${pair('决赛', 'Finals')}</th>
+                    <th class="l hide-sm">${pair('最佳场地', 'Best surface')}</th>
                   </tr></thead>
                   <tbody>
                     ${years
@@ -390,16 +417,16 @@ export async function render(host, { id }) {
         Object.keys(s).length
           ? `<div class="grid c2">
               <div class="card">
-                <div class="card-hd"><div><span class="eyebrow">${seasonYear} season</span>
-                  <h3>Serve &amp; return profile</h3></div>
-                  <span class="dim" style="font-size:11.5px">official WTA season record</span></div>
+                <div class="card-hd"><div><span class="eyebrow">${seasonYear} ${pair('赛季', 'season')}</span>
+                  <h3>${pair('发球与接发特征', 'Serve &amp; return profile')}</h3></div>
+                  <span class="dim" style="font-size:11.5px">${pair('WTA 官方赛季记录', 'official WTA season record')}</span></div>
                 <div class="card-bd flush">
                   ${serveMetrics
                     .map(([label, key, fmt, isPct]) => {
                       const v = s[key];
                       const tourAvg = avg(key);
                       return `<div class="lb-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto;gap:var(--sp-4)">
-                        <span class="lb-n dim" style="font-size:12.5px">${esc(label)}</span>
+                        <span class="lb-n dim" style="font-size:12.5px">${label}</span>
                         <span class="lb-bar" style="margin:0"><i style="width:${
                           isPct && v != null ? Math.min(100, v) : v != null ? Math.min(100, (v / Math.max(1, avg(key) * 1.6)) * 100) : 0
                         }%"></i></span>
@@ -410,8 +437,10 @@ export async function render(host, { id }) {
                     })
                     .join('')}
                   <div class="card-bd dim" style="font-size:11.5px;border-top:1px solid var(--line-soft)">
-                    Second figure is the top-300 average for that statistic, so you can
-                    read at a glance where this player sits relative to the field.
+                    ${pair(
+                      '斜杠后的数字是前 300 名球员在该项统计上的平均值，可一眼看出这位球员相对整体的位置。',
+                      'The figure after the slash is the top-300 average, so you can see where this player sits relative to the field.',
+                    )}
                   </div>
                 </div>
               </div>
@@ -420,27 +449,29 @@ export async function render(host, { id }) {
                 ${
                   rankBoard
                     ? `<div class="card">
-                        <div class="card-hd"><h3>Where she ranks on tour</h3></div>
+                        <div class="card-hd"><h3>${pair('在巡回赛中的位置', 'Where she ranks on tour')}</h3></div>
                         <div class="card-bd">
                           <div class="tiles">
                             ${tileMini(
                               rankInBoard(rankBoard) || '—',
-                              'Service games won',
+                              pair('发球局胜率', 'Service games won'),
                               rankBoard.rows[0]?.value != null
-                                ? `Leader: ${rankBoard.rows[0].name} ${pct(rankBoard.rows[0].value)}`
+                                ? `${pair('榜首', 'Leader')}: ${playerZh(rankBoard.rows[0].id) || rankBoard.rows[0].name} ${pct(rankBoard.rows[0].value)}`
                                 : '',
                             )}
                             ${tileMini(
                               rankInBoard(acesBoard) || '—',
-                              'Aces',
+                              pair('ACE 球', 'Aces'),
                               acesBoard?.rows[0]
-                                ? `Leader: ${acesBoard.rows[0].name} ${int(acesBoard.rows[0].value)}`
+                                ? `${pair('榜首', 'Leader')}: ${playerZh(acesBoard.rows[0].id) || acesBoard.rows[0].name} ${int(acesBoard.rows[0].value)}`
                                 : '',
                             )}
                           </div>
                           <div class="dim mt4" style="font-size:11.5px">
-                            Season-to-date among the ${comparable.length} ranked players
-                            with at least 10 matches.
+                            ${pair(
+                              `在 ${comparable.length} 位本赛季至少出战 10 场的排名球员中的名次。`,
+                              `Season-to-date rank among the ${comparable.length} ranked players with at least 10 matches.`,
+                            )}
                           </div>
                         </div>
                       </div>`
@@ -450,7 +481,7 @@ export async function render(host, { id }) {
                 ${
                   s.perTournamentAvg
                     ? `<div class="card mt5">
-                        <div class="card-hd"><h3>Per-tournament averages</h3></div>
+                        <div class="card-hd"><h3>${pair('单项赛事平均值', 'Per-tournament averages')}</h3></div>
                         <div class="card-bd flush">
                           ${Object.entries(s.perTournamentAvg)
                             .slice(0, 10)
@@ -471,8 +502,11 @@ export async function render(host, { id }) {
               </div>
             </div>`
           : `<div class="card"><div class="card-bd"><div class="empty">
-              <b>No season statistics published</b>
-              <div>The WTA does not publish a ${seasonYear} statistics record for this player yet.</div>
+              <b>${pair('暂无赛季统计', 'No season statistics published')}</b>
+              <div>${pair(
+                `WTA 尚未发布这位球员的 ${seasonYear} 赛季统计记录。`,
+                `The WTA does not publish a ${seasonYear} statistics record for this player yet.`,
+              )}</div>
             </div></div></div>`
       }
     </div>
@@ -480,8 +514,8 @@ export async function render(host, { id }) {
     <div data-panel="ranking" class="mt5" hidden>
       <div class="grid c2">
         <div class="card">
-          <div class="card-hd"><div><span class="eyebrow">Career</span><h3>Singles ranking history</h3></div>
-            <span class="dim" style="font-size:11.5px">last 5 years</span></div>
+          <div class="card-hd"><div><span class="eyebrow">Career · 生涯</span><h3>${pair('单打排名历史', 'Singles ranking history')}</h3></div>
+            <span class="dim" style="font-size:11.5px">${pair('近五年', 'last 5 years')}</span></div>
           <div class="card-bd">
             ${lineChart({
               points,
@@ -493,7 +527,7 @@ export async function render(host, { id }) {
           </div>
         </div>
         <div class="card">
-          <div class="card-hd"><div><span class="eyebrow">Career</span><h3>Doubles ranking history</h3></div></div>
+          <div class="card-hd"><div><span class="eyebrow">Career · 生涯</span><h3>${pair('双打排名历史', 'Doubles ranking history')}</h3></div></div>
           <div class="card-bd">
             ${lineChart({
               points: doubles,
@@ -506,14 +540,14 @@ export async function render(host, { id }) {
         </div>
       </div>
       <div class="card mt5">
-        <div class="card-hd"><h3>Ranking milestones</h3></div>
+        <div class="card-hd"><h3>${pair('排名里程碑', 'Ranking milestones')}</h3></div>
         <div class="card-bd">
           <dl class="dl">
-            ${row('Highest singles rank', b.sglHighRank ? `No.${b.sglHighRank} · ${dateLabel(b.sglHighDate)}` : '—')}
-            ${row('Highest doubles rank', b.dblHighRank ? `No.${b.dblHighRank} · ${dateLabel(b.dblHighDate)}` : '—')}
-            ${row('Weeks in the data set', int(h.length))}
-            ${row('Current singles rank', `No.${p.rank}`)}
-            ${row('Current doubles rank', b.dblRank ? `No.${b.dblRank}` : '—')}
+            ${row(pair('单打最高排名', 'Highest singles rank'), b.sglHighRank ? `No.${b.sglHighRank} · ${dateLabel(b.sglHighDate)}` : '—')}
+            ${row(pair('双打最高排名', 'Highest doubles rank'), b.dblHighRank ? `No.${b.dblHighRank} · ${dateLabel(b.dblHighDate)}` : '—')}
+            ${row(pair('数据中的周数', 'Weeks in the data set'), int(h.length))}
+            ${row(pair('当前单打排名', 'Current singles rank'), `No.${p.rank}`)}
+            ${row(pair('当前双打排名', 'Current doubles rank'), b.dblRank ? `No.${b.dblRank}` : '—')}
           </dl>
         </div>
       </div>
@@ -524,7 +558,7 @@ export async function render(host, { id }) {
         ? `<div data-panel="log" class="mt5" hidden>
             <div class="card">
               <div class="card-hd">
-                <h3>Singles match log</h3>
+                <h3>${pair('单打比赛记录', 'Singles match log')}</h3>
                 <div class="chips" data-years>
                   ${years
                     .map(
@@ -566,16 +600,16 @@ export async function render(host, { id }) {
               <span class="m-res ${m.w ? 'w' : 'l'}">${m.w ? 'W' : 'L'}</span>
               <span class="m-main">
                 <span class="m-t">
-                  <span class="m-name">${esc(m.o || '—')}</span>
-                  ${m.oc ? country(m.oc) : ''}
+                  <span class="m-name">${pair(playerZh(m.oid), m.o || '—')}</span>
+                  ${m.oc ? countryName(m.oc) : ''}
                   ${m.orank ? `<span class="num dim" style="font-size:11px">No.${m.orank}</span>` : ''}
                 </span>
-                <span class="m-sub">${esc(m.t)} · ${esc(m.r)} · ${esc(surfaceLabel(m.sfc))}</span>
+                <span class="m-sub">${pair(tournamentZhL(m.t), m.t)} · ${roundName(m.r)} · ${surfaceName(m.sfc, surfaceLabel(m.sfc))}</span>
               </span>
               <span class="m-score">${esc(m.sc)}</span>
             </div>`,
           )
-          .join('') || '<div class="empty">No matches logged for this season</div>';
+          .join('') || `<div class="empty">${pair('该赛季没有比赛记录', 'No matches logged for this season')}</div>`;
     };
     paintMatches(currentYear);
     host.querySelector('[data-years]')?.addEventListener('click', (e) => {
@@ -589,12 +623,16 @@ export async function render(host, { id }) {
   }
 }
 
-function row(label, value) {
-  return `<dt>${esc(label)}</dt><dd>${value}</dd>`;
+function tournamentZhL(name) {
+  return tournamentZh(name);
 }
 
-function tileMini(value, label, sub) {
-  return `<div class="tile"><b>${esc(value)}</b><small>${esc(label)}</small>${
+function row(labelHtml, value) {
+  return `<dt>${labelHtml}</dt><dd>${value}</dd>`;
+}
+
+function tileMini(value, labelHtml, sub) {
+  return `<div class="tile"><b>${esc(value)}</b><small>${labelHtml}</small>${
     sub ? `<div class="sub">${esc(sub)}</div>` : ''
   }</div>`;
 }

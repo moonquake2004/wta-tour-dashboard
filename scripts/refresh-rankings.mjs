@@ -10,7 +10,9 @@ import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 import { ROOT } from './lib.mjs';
 
-const STEPS = ['fetch-rankings.mjs', 'derive.mjs'];
+// Chinese names are keyed by WTA player id, so a ranking refresh needs a new
+// zh snapshot too or newly ranked players would have no Chinese name.
+const STEPS = ['fetch-rankings.mjs', 'derive.mjs', 'fetch-zh.mjs'];
 
 for (const file of STEPS) {
   console.log(`\n▶ ${file}`);

@@ -2,11 +2,16 @@
 
 **Live:** <https://moonquake2004.github.io/wta-tour-dashboard/>
 
-An independent, open-source data dashboard for the **Hologic WTA Tour**.
+An independent, open-source, **bilingual (English / 简体中文)** data dashboard for
+the **Hologic WTA Tour**.
 
 Rankings, player profiles, career records, head-to-heads, the tour calendar and
 season statistics — every figure read from the **official WTA data feed** and
 rebuilt into a fast, dependency-free static site.
+
+Every player, tournament, country, round and surface is shown in **both Chinese
+and English** at the same time. A three-way language switch (中/EN · 中文 · EN)
+lets a reader collapse to a single language; the choice persists locally.
 
 > **Data snapshot:** rankings of **31 August 2026** · 300 ranked players · 300 player
 > biographies · 222 calendar events across 2025–2026.
@@ -45,6 +50,23 @@ Everything comes from the public JSON API behind `wtatennis.com`:
 | `GET /tennis/players/{id}/matches` | Complete singles and doubles match log |
 | `GET /tennis/players/{id}/headtohead/{opp}` | Career head-to-head and every meeting |
 | `GET /tennis/tournaments` | Tour calendar, draws, surfaces, prize money, champions |
+
+### Chinese localisation sources
+
+The official feed is English-only, so Chinese names come from open structured
+sources rather than guesswork:
+
+| Dataset | Source |
+| --- | --- |
+| Player names | **Wikidata**, joined on property **P597** (the WTA player id) |
+| Traditional → Simplified | **MediaWiki `zh-hans` variant converter** |
+| Tournament names | Curated dictionary for the majors and WTA 1000 events, then Wikidata, then a city-name rule |
+| Countries | Curated IOC-code table (117 entries) |
+| Rounds, surfaces, levels | Curated tennis terminology |
+| ~8% of players | Curated transliterations following each source language's conventions |
+
+Current coverage: **300 / 300** ranked players, **670** tournament names covering
+**100%** of matches in the log, and **61 / 61** country codes used by the data.
 
 ### Two constraints that shaped the architecture
 

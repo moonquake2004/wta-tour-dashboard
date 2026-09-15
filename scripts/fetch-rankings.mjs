@@ -44,7 +44,8 @@ const payload = {
 
 await writeJson('data/rankings-singles.json', payload);
 
-// A compact index used by the client-side search box.
+// A compact index used by the client-side search box.  Chinese names are merged
+// in by scripts/fetch-zh.mjs so a reader can search in either language.
 await writeJson(
   'data/players-index.json',
   players.map((p) => ({

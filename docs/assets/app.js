@@ -5,6 +5,7 @@
  * Pages, so no server-side rewrite rules are needed and deep links survive.
  */
 import { rankings, playerIndex } from './data.js';
+import { initI18n, setMode } from './i18n.js';
 import { footer, header, mountSearch } from './ui.js';
 import { errorState, dateLabel } from './utils.js';
 
@@ -80,6 +81,15 @@ async function route() {
     location.hash = `#/player/${id}`;
   });
 
+  // Language switch: re-render in place so the active view keeps its scroll
+  // position and any interactive state it has already built.
+  headerEl.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-lang]');
+    if (!btn) return;
+    setMode(btn.dataset.lang);
+    route();
+  });
+
   if (!view) {
     main.innerHTML = `<div class="page shell">${errorState(
       'Page not found',
@@ -108,7 +118,9 @@ window.addEventListener('hashchange', route);
 
 /* Document title follows the active view. */
 export function setTitle(text) {
-  document.title = text ? `${text} · WTA Tour Dashboard` : 'WTA Tour Dashboard';
+  document.title = text
+    ? `${text} · WTA 数据看板 | WTA Tour Dashboard`
+    : 'WTA 数据看板 | WTA Tour Dashboard';
 }
 
 /** Programmatic navigation helper for views. */
@@ -118,6 +130,7 @@ export function go(hash) {
 
 async function boot() {
   try {
+    await initI18n();
     const [r, idx] = await Promise.all([rankings(), playerIndex()]);
     state.asOf = r.asOf;
     state.generatedAt = new Date().toLocaleDateString('en-GB', {

@@ -23,6 +23,7 @@ const STEPS = [
   { name: 'h2h', file: 'fetch-h2h.mjs' },
   { name: 'derive', file: 'derive.mjs' },
   { name: 'compact', file: 'compact.mjs' },
+  { name: 'zh', file: 'fetch-zh.mjs', skip: skip('zh') },
 ].filter((s) => !s.skip);
 
 const started = Date.now();

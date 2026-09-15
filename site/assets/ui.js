@@ -3,53 +3,67 @@
  */
 import {
   avatar,
-  country,
   esc,
   int,
   movement,
   pct,
   record,
   skeleton,
+  surfaceLabel,
+  titleCase,
 } from './utils.js';
+import {
+  countryName,
+  label,
+  languageSwitch,
+  levelName,
+  levelZh,
+  pair,
+  playerName,
+  playerZh as zhName,
+  roundName,
+  surfaceName,
+} from './i18n.js';
 
 /* ==========================================================================
    Chrome
    ========================================================================== */
 
 export const NAV = [
-  { href: '#/', label: 'Overview' },
-  { href: '#/rankings', label: 'Rankings' },
-  { href: '#/players', label: 'Players' },
-  { href: '#/compare', label: 'Head-to-head' },
-  { href: '#/calendar', label: 'Calendar' },
-  { href: '#/stats', label: 'Statistics' },
-  { href: '#/about', label: 'Data' },
+  { href: '#/', label: 'Overview', zh: '总览' },
+  { href: '#/rankings', label: 'Rankings', zh: '排名' },
+  { href: '#/players', label: 'Players', zh: '球员' },
+  { href: '#/compare', label: 'Head-to-head', zh: '交手对比' },
+  { href: '#/calendar', label: 'Calendar', zh: '赛程' },
+  { href: '#/stats', label: 'Statistics', zh: '统计' },
+  { href: '#/about', label: 'Data', zh: '数据' },
 ];
 
 export function header({ route, asOf }) {
-  const nav = NAV.map(
-    (n) =>
-      `<a href="${n.href}" class="${
-        isActive(n.href, route) ? 'on' : ''
-      }">${n.label}</a>`,
+  const nav = NAV.map((n) =>
+    `<a href="${n.href}" class="${isActive(n.href, route) ? 'on' : ''}">${pair(
+      n.zh,
+      n.label,
+    )}</a>`,
   ).join('');
 
   return `<header class="hdr"><div class="shell hdr-in">
     <a class="brand" href="#/">
       <span class="brand-mark"><span>W</span></span>
-      <span class="brand-txt"><b>WTA Tour</b><i>Data Dashboard</i></span>
+      <span class="brand-txt"><b>WTA Tour</b><i>数据看板 · Dashboard</i></span>
     </a>
     <nav class="nav">${nav}</nav>
     <div class="search" data-search>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
         <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>
       </svg>
-      <input type="search" placeholder="Search player…" aria-label="Search player"
+      <input type="search" placeholder="${esc(label('search'))}" aria-label="${esc(label('search'))}"
         autocomplete="off" spellcheck="false" data-search-input>
       <div class="suggest" data-search-suggest hidden></div>
     </div>
+    ${languageSwitch()}
     <div class="hdr-meta">
-      <span class="asof">Rankings <b>${esc(asOf || '—')}</b></span>
+      <span class="asof">${pair('排名日期', 'Rankings')} <b>${esc(asOf || '—')}</b></span>
     </div>
   </div></header>`;
 }
@@ -73,16 +87,16 @@ export function footer({ asOf, generatedAt }) {
         </p>
       </div>
       <div>
-        <h4>Explore</h4>
+        <h4>${pair('浏览', 'Explore')}</h4>
         <ul>
-          <li><a href="#/rankings">Singles rankings</a></li>
-          <li><a href="#/players">Player profiles</a></li>
-          <li><a href="#/compare">Head-to-head</a></li>
-          <li><a href="#/calendar">Tour calendar</a></li>
+          <li><a href="#/rankings">${pair('单打排名', 'Singles rankings')}</a></li>
+          <li><a href="#/players">${pair('球员档案', 'Player profiles')}</a></li>
+          <li><a href="#/compare">${pair('交手对比', 'Head-to-head')}</a></li>
+          <li><a href="#/calendar">${pair('巡回赛赛程', 'Tour calendar')}</a></li>
         </ul>
       </div>
       <div>
-        <h4>Official sources</h4>
+        <h4>${pair('官方来源', 'Official sources')}</h4>
         <ul>
           <li><a href="https://www.wtatennis.com/rankings/singles" target="_blank" rel="noopener">WTA rankings ↗</a></li>
           <li><a href="https://www.wtatennis.com/tournaments" target="_blank" rel="noopener">WTA calendar ↗</a></li>
@@ -91,18 +105,21 @@ export function footer({ asOf, generatedAt }) {
         </ul>
       </div>
       <div>
-        <h4>Snapshot</h4>
+        <h4>${pair('数据快照', 'Snapshot')}</h4>
         <ul>
-          <li>Rankings as of <span class="num">${esc(asOf || '—')}</span></li>
-          <li>Rebuilt <span class="num">${esc(generatedAt || '—')}</span></li>
-          <li><a href="#/about">Methodology &amp; licensing</a></li>
+          <li>${pair('排名截至', 'Rankings as of')} <span class="num">${esc(asOf || '—')}</span></li>
+          <li>${pair('重建时间', 'Rebuilt')} <span class="num">${esc(generatedAt || '—')}</span></li>
+          <li><a href="#/about">${pair('方法论与授权', 'Methodology &amp; licensing')}</a></li>
           <li><a href="https://github.com/moonquake2004" target="_blank" rel="noopener">GitHub ↗</a></li>
         </ul>
       </div>
     </div>
     <div class="ftr-btm">
-      <span>Not affiliated with or endorsed by the WTA. Player data © WTA Tour, Inc.</span>
-      <span>Built as a static site · no tracking · no cookies</span>
+      <span>${pair(
+        '本站与 WTA 无隶属关系。球员数据版权归 WTA Tour, Inc. 所有。',
+        'Not affiliated with or endorsed by the WTA. Player data © WTA Tour, Inc.',
+      )}</span>
+      <span>${pair('静态站点 · 无跟踪 · 无 Cookie', 'Static site · no tracking · no cookies')}</span>
     </div>
   </div></footer>`;
 }
@@ -123,13 +140,41 @@ export function pageHead({ eyebrow, title, sub, actions = '' }) {
    Small fragments
    ========================================================================== */
 
-export function playerCell(p, { size = 34, showRank = false } = {}) {
+/** Surface dot + bilingual label. */
+export function surfaceChip(surface) {
+  const key = titleCase(surfaceLabel(surface));
+  return `<span class="sfc ${esc(key)}"><i></i>${surfaceName(
+    surface,
+    surfaceLabel(surface),
+  )}</span>`;
+}
+
+/**
+ * Tournament level tag, e.g. "大满贯 / SLAM" or "WTA 500 赛 / WTA 500".
+ * Lives here rather than in utils.js because it needs the i18n lookups, and
+ * utils.js cannot import them without creating a cycle.
+ */
+export function levelTag(level) {
+  if (!level) return '';
+  const l = String(level);
+  let cls = '';
+  if (/grand slam/i.test(l)) cls = 'gs';
+  else if (/1000/i.test(l)) cls = 'w1000';
+  else if (/500/i.test(l)) cls = 'w500';
+  else if (/250|125/i.test(l)) cls = 'w250';
+
+  const en = l.replace(/^Grand Slam$/i, 'SLAM');
+  const zh = levelZh(l);
+  return `<span class="tag ${cls}">${zh ? pair(zh, en) : esc(en)}</span>`;
+}
+
+export function playerCell(p, { size = 34, showRank = false, meta = true } = {}) {
   return `<div class="p-cell">
     ${avatar(p.id, p.name, size)}
     <div style="min-width:0">
-      <a class="p-name" href="#/player/${p.id}">${esc(p.name)}</a>
+      <a class="p-name" href="#/player/${p.id}">${playerName(p)}</a>
       <div class="row" style="gap:7px;margin-top:2px">
-        ${country(p.country)}
+        ${meta ? countryName(p.country) : ''}
         ${
           showRank && p.rank
             ? `<span class="num dim" style="font-size:11px">No.${p.rank}</span>`
@@ -148,10 +193,21 @@ export function formStrip(results, limit = 10) {
     .join('')}</div>`;
 }
 
+/**
+ * `label` (and `sub`) may be either plain text or pre-rendered bilingual markup
+ * from `pair()`.  Plain text is escaped; markup is inserted as-is so the
+ * Chinese/English stack renders instead of leaking tags.
+ */
 export function tile(value, label, sub = '') {
-  return `<div class="tile"><b>${value}</b><small>${esc(label)}</small>${
-    sub ? `<div class="sub">${sub}</div>` : ''
+  return `<div class="tile"><b>${value}</b><small>${rich(label)}</small>${
+    sub ? `<div class="sub">${rich(sub)}</div>` : ''
   }</div>`;
+}
+
+/** Escape plain text, pass already-rendered markup through untouched. */
+function rich(value) {
+  const v = String(value ?? '');
+  return v.includes('<span') || v.includes('<b') || v.includes('<a ') ? v : esc(v);
 }
 
 export function tiles(items) {
@@ -335,14 +391,19 @@ export function mountSearch(root, index, onPick) {
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase();
 
-  const entries = index.map((p) => ({ ...p, key: norm(p.n) }));
+  // Index both the English and Chinese names so a reader can type either.
+  const entries = index.map((p) => ({
+    ...p,
+    key: norm(p.n),
+    zh: zhName(p.i),
+  }));
 
   let results = [];
   let cursor = -1;
 
   function render() {
     if (!results.length) {
-      box.innerHTML = `<div class="s-empty">No player found</div>`;
+      box.innerHTML = `<div class="s-empty">${pair('未找到球员', 'No player found')}</div>`;
       box.hidden = false;
       return;
     }
@@ -350,7 +411,7 @@ export function mountSearch(root, index, onPick) {
       .map(
         (p, i) => `<button type="button" data-pick="${p.i}" class="${i === cursor ? 'sel' : ''}">
           ${avatar(p.i, p.n, 28)}
-          <span class="s-name">${esc(p.n)}</span>
+          <span class="s-name">${pair(p.zh, p.n)}</span>
           <span class="flag">${esc(p.c || '')}</span>
           <span class="s-rank">${p.r ? `#${p.r}` : ''}</span>
         </button>`,
@@ -370,8 +431,9 @@ export function mountSearch(root, index, onPick) {
     const starts = [];
     const contains = [];
     for (const p of entries) {
+      const zhHit = p.zh && p.zh.includes(q.trim());
       if (p.key.startsWith(key)) starts.push(p);
-      else if (p.key.includes(key)) contains.push(p);
+      else if (p.key.includes(key) || zhHit) contains.push(p);
       if (starts.length >= 12) break;
     }
     results = [...starts, ...contains].slice(0, 12);
@@ -469,4 +531,15 @@ export function attachSort(table, onSort) {
   });
 }
 
-export { avatar, country, movement, pct, record };
+export {
+  avatar,
+  countryName,
+  levelName,
+  movement,
+  pair,
+  pct,
+  playerName,
+  record,
+  roundName,
+  surfaceName,
+};

@@ -3,8 +3,9 @@
  * career context pulled from the official biography records.
  */
 import { bios, rankings, seasonStats } from '../data.js';
-import { loading, pageHead, playerCell } from '../ui.js';
-import { country, esc, int, pct, record, winPct } from '../utils.js';
+import { countryName, loading, pair, pageHead, playerCell } from '../ui.js';
+import { countryZh, playerZh } from '../i18n.js';
+import { esc, int, pct, record, winPct } from '../utils.js';
 import { setTitle } from '../app.js';
 
 export const skeleton = () => loading(10);
@@ -48,38 +49,39 @@ export async function render(host) {
 
   host.innerHTML = `
   ${pageHead({
-    eyebrow: 'Player directory',
-    title: 'Every ranked player, in one place',
-    sub: `Career records, high rankings and season serve statistics for all ${int(
+    eyebrow: 'Player directory · 球员名录',
+    title: pair('所有排名球员，一处查全', 'Every ranked player, in one place'),
+    sub: `当前单打排名快照中全部 ${int(
       all.length,
-    )} players in the current singles ranking snapshot. Select a player for the full profile.`,
+    )} 位球员的生涯战绩、最高排名与赛季发球统计。点击任意球员查看完整档案。<br>
+    <span style="opacity:.7;font-size:13px">Career records, high rankings and season statistics for every ranked player — select one for the full profile.</span>`,
   })}
 
   <div class="grid c4" style="margin-bottom:var(--sp-6)">
-    ${mini('Players listed', int(all.length), 'current ranking')}
-    ${mini('Combined titles', int(totalTitles), 'career singles')}
-    ${mini('Youngest', youngest ? `${youngest.age}` : '—', youngest ? esc(shortName(youngest.name)) : '')}
-    ${mini('Most experienced', oldest ? `${oldest.age}` : '—', oldest ? esc(shortName(oldest.name)) : '')}
+    ${mini(pair('收录球员', 'Players listed'), int(all.length), pair('当前排名', 'current ranking'))}
+    ${mini(pair('冠军总数', 'Combined titles'), int(totalTitles), pair('生涯单打', 'career singles'))}
+    ${mini(pair('最年轻', 'Youngest'), youngest ? `${youngest.age}` : '—', youngest ? pair(playerZh(youngest.id), shortName(youngest.name)) : '')}
+    ${mini(pair('最资深', 'Most experienced'), oldest ? `${oldest.age}` : '—', oldest ? pair(playerZh(oldest.id), shortName(oldest.name)) : '')}
   </div>
 
   <div class="sec-hd" style="align-items:center">
     <div class="chips" data-presets>
-      ${chip('all', 'All players', preset)}
-      ${chip('young', 'Under 21', preset)}
-      ${chip('titles', 'Multiple titles', preset)}
-      ${chip('form', 'Best 2026 win %', preset)}
+      ${chip('all', pair('全部球员', 'All players'), preset)}
+      ${chip('young', pair('21 岁以下', 'Under 21'), preset)}
+      ${chip('titles', pair('多个冠军', 'Multiple titles'), preset)}
+      ${chip('form', pair('2026 胜率最高', 'Best 2026 win %'), preset)}
     </div>
     <div class="row wrap" style="gap:10px">
-      <input type="search" data-q placeholder="Search name or country…" aria-label="Search players"
+      <input type="search" data-q placeholder="${pair('搜索姓名或国家…', 'Search name or country…')}" aria-label="Search players"
         style="padding:7px 11px;background:var(--panel);border:1px solid var(--line);border-radius:3px;font-size:13px;outline:none;width:210px">
       <select data-sort aria-label="Sort players"
         style="padding:7px 11px;background:var(--panel);border:1px solid var(--line);border-radius:3px;font-size:13px;outline:none">
-        <option value="rank">Sort: Ranking</option>
-        <option value="name">Sort: Name</option>
-        <option value="age">Sort: Age</option>
-        <option value="points">Sort: Ranking points</option>
-        <option value="titles">Sort: Career titles</option>
-        <option value="careerPct">Sort: Career win %</option>
+        <option value="rank">${pair('排序：排名', 'Sort: Ranking')}</option>
+        <option value="name">${pair('排序：姓名', 'Sort: Name')}</option>
+        <option value="age">${pair('排序：年龄', 'Sort: Age')}</option>
+        <option value="points">${pair('排序：积分', 'Sort: Ranking points')}</option>
+        <option value="titles">${pair('排序：冠军数', 'Sort: Career titles')}</option>
+        <option value="careerPct">${pair('排序：胜率', 'Sort: Career win %')}</option>
       </select>
     </div>
   </div>
@@ -89,16 +91,16 @@ export async function render(host) {
       <table class="tbl">
         <thead>
           <tr>
-            <th class="l" style="width:56px">Rank</th>
-            <th class="l">Player</th>
-            <th class="c hide-sm">Country</th>
-            <th class="hide-sm">Age</th>
-            <th class="hide-sm">High</th>
-            <th>Titles</th>
-            <th class="hide-sm">Career W–L</th>
-            <th class="hide-sm">Win %</th>
-            <th class="hide-sm">Aces ’26</th>
-            <th>Points</th>
+            <th class="l" style="width:64px">${pair('排名', 'Rank')}</th>
+            <th class="l">${pair('球员', 'Player')}</th>
+            <th class="c hide-sm">${pair('国家/地区', 'Country')}</th>
+            <th class="hide-sm">${pair('年龄', 'Age')}</th>
+            <th class="hide-sm">${pair('最高', 'High')}</th>
+            <th>${pair('冠军', 'Titles')}</th>
+            <th class="hide-sm">${pair('生涯胜负', 'Career W–L')}</th>
+            <th class="hide-sm">${pair('胜率', 'Win %')}</th>
+            <th class="hide-sm">${pair('ACE', 'Aces ’26')}</th>
+            <th>${pair('积分', 'Points')}</th>
           </tr>
         </thead>
         <tbody data-body></tbody>
@@ -106,7 +108,7 @@ export async function render(host) {
     </div>
     <div class="card-bd row between" data-foot style="border-top:1px solid var(--line-soft)">
       <span class="dim" data-count></span>
-      <button class="btn" data-more>Show 60 more</button>
+      <button class="btn" data-more>${pair('再显示 60 位', 'Show 60 more')}</button>
     </div>
   </div>
   `;
@@ -122,7 +124,9 @@ export async function render(host) {
       rows = rows.filter(
         (p) =>
           p.name.toUpperCase().includes(q) ||
-          (p.country || '').toUpperCase().includes(q),
+          (p.country || '').toUpperCase().includes(q) ||
+          (countryZh(p.country) || '').includes(query.trim()) ||
+          (playerZh(p.id) || '').includes(query.trim()),
       );
     }
     if (preset === 'young') rows = rows.filter((p) => p.age && p.age < 21);
@@ -154,7 +158,7 @@ export async function render(host) {
         (p) => `<tr class="clickable ${p.rank <= 3 ? 'top3' : ''}" data-href="#/player/${p.id}">
           <td class="l rank-cell ${p.rank <= 3 ? 'top' : ''}">${p.rank}</td>
           <td class="l">${playerCell(p, { size: 32 })}</td>
-          <td class="c hide-sm">${country(p.country)}</td>
+          <td class="c hide-sm">${countryName(p.country)}</td>
           <td class="hide-sm num dim">${p.age ?? '—'}</td>
           <td class="hide-sm num dim">${p.highRank ? `No.${p.highRank}` : '—'}</td>
           <td class="num">${p.titles ?? '—'}</td>
@@ -166,7 +170,10 @@ export async function render(host) {
       )
       .join('') || `<tr><td colspan="10"><div class="empty">No players match this filter</div></td></tr>`;
 
-    countEl.textContent = `Showing ${shown.length} of ${matching.length} players`;
+    countEl.innerHTML = pair(
+      `显示 ${shown.length} / ${matching.length} 位球员`,
+      `Showing ${shown.length} of ${matching.length} players`,
+    );
     moreBtn.style.display = matching.length > shown.length ? '' : 'none';
 
     body.querySelectorAll('tr[data-href]').forEach((tr) => {
@@ -213,17 +220,17 @@ export async function render(host) {
   paint();
 }
 
-function chip(key, label, active) {
-  return `<button class="chip ${key === active ? 'on' : ''}" data-preset="${key}">${label}</button>`;
+function chip(key, labelHtml, active) {
+  return `<button class="chip ${key === active ? 'on' : ''}" data-preset="${key}">${labelHtml}</button>`;
 }
 
-function mini(label, value, sub) {
+function mini(labelHtml, value, subHtml) {
   return `<div class="card"><div class="card-bd">
-    <div class="eyebrow">${esc(label)}</div>
+    <div class="eyebrow">${labelHtml}</div>
     <b class="num" style="display:block;font-size:26px;font-weight:500;letter-spacing:-0.03em;margin-top:3px">${esc(
       value,
     )}</b>
-    <div class="dim" style="font-size:12px">${esc(sub)}</div>
+    <div class="dim" style="font-size:12px">${subHtml}</div>
   </div></div>`;
 }
 
