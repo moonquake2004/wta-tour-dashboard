@@ -12,7 +12,16 @@ import { ROOT } from './lib.mjs';
 
 // Chinese names are keyed by WTA player id, so a ranking refresh needs a new
 // zh snapshot too or newly ranked players would have no Chinese name.
-const STEPS = ['fetch-rankings.mjs', 'derive.mjs', 'fetch-zh.mjs'];
+// Rankings drive the dashboard payload and the Chinese name map, so a light
+// refresh rebuilds all three and re-verifies before anything is published.
+const STEPS = [
+  'fetch-rankings.mjs',
+  'derive.mjs',
+  'fetch-zh.mjs',
+  'generate-data.mjs',
+  'build-site.mjs',
+  'verify-dashboard.mjs',
+];
 
 for (const file of STEPS) {
   console.log(`\n▶ ${file}`);

@@ -1,0 +1,368 @@
+#!/usr/bin/env node
+/**
+ * Build the single data file the dashboard consumes.
+ *
+ * Mirrors the shape of a results dashboard: one `window.WTA_DATA` global that a
+ * static single-page site can read without any fetch, so the published site is
+ * just index.html + assets + data with no runtime requests for content.
+ *
+ * Everything here is derived from the official WTA snapshots in data/ — no new
+ * external calls, so the site stays exactly reproducible offline.
+ */
+import { readFile, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { ROOT, log } from './lib.mjs';
+
+const readJson = async (f, fallback) => {
+  try {
+    return JSON.parse(await readFile(resolve(ROOT, 'data', f), 'utf8'));
+  } catch {
+    return fallback;
+  }
+};
+
+log('gen', 'Building the dashboard data file…');
+
+const [rank, bios, stats, history, matches, tour, boards, h2h, names, index, zh] =
+  await Promise.all([
+    readJson('rankings-singles.json', { players: [], asOf: null }),
+    readJson('bios.json', {}),
+    readJson('season-stats.json', {}),
+    readJson('ranking-history.json', {}),
+    readJson('matches.json', {}),
+    readJson('tournaments.json', { events: [] }),
+    readJson('leaderboards.json', { boards: [], career: {}, seasonMap: {} }),
+    readJson('h2h.json', {}),
+    readJson('h2h-names.json', {}),
+    readJson('players-index.json', []),
+    readJson('zh.json', { players: {}, tournaments: {}, countries: {}, levels: {}, rounds: {}, surfaces: {} }),
+  ]);
+
+const SEASON = boards.season || new Date().getUTCFullYear();
+const rankById = new Map(rank.players.map((p) => [p.id, p]));
+
+/* ------------------------------------------------------------------ */
+/* Season records (W–L, titles, surface splits)                        */
+/* ------------------------------------------------------------------ */
+
+const seasonRecords = {};
+for (const [id, list] of Object.entries(matches)) {
+  for (const m of list) {
+    const y = m.yr ?? Number(m.d.slice(0, 4));
+    const key = `${id}`;
+    seasonRecords[key] ??= {};
+    const bucket = (seasonRecords[key][y] ??= {
+      w: 0,
+      l: 0,
+      titles: 0,
+      finals: 0,
+      surfaces: {},
+      last10: [],
+    });
+    bucket[m.w ? 'w' : 'l'] += 1;
+    const sfc = m.sfc || 'UNKNOWN';
+    bucket.surfaces[sfc] ??= { w: 0, l: 0 };
+    bucket.surfaces[sfc][m.w ? 'w' : 'l'] += 1;
+    if (m.r === 'F') {
+      bucket.finals += 1;
+      if (m.w) bucket.titles += 1;
+    }
+  }
+}
+// newest-first form strip per player/season
+for (const [id, list] of Object.entries(matches)) {
+  const sorted = [...list].sort((a, b) => (a.d < b.d ? 1 : -1));
+  for (const y of Object.keys(seasonRecords[id] || {})) {
+    seasonRecords[id][y].last10 = sorted
+      .filter((m) => (m.yr ?? Number(m.d.slice(0, 4))) === Number(y))
+      .slice(0, 10)
+      .map((m) => (m.w ? 1 : 0));
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 2026 champions — one entry per completed event                      */
+/* ------------------------------------------------------------------ */
+
+/** A player's log is only stored for the top 120, so champions come from both
+ *  the tournament feed (authoritative) and the match log (fallback). */
+const champions = [];
+for (const e of tour.events) {
+  if (e.status !== 'past' || !e.champion) continue;
+  champions.push({
+    event: e.name,
+    year: e.year,
+    date: e.end || e.start,
+    level: e.level,
+    surface: e.surface,
+    city: e.city,
+    country: e.country,
+    player: {
+      id: e.champion.id,
+      name: e.champion.name,
+      country: e.champion.country,
+    },
+  });
+}
+champions.sort((a, b) => (a.date < b.date ? 1 : -1));
+
+/* ------------------------------------------------------------------ */
+/* Results feed — most recent completed matches                        */
+/* ------------------------------------------------------------------ */
+
+/** Deduplicate a match that appears in both players' logs. */
+const seenMatch = new Set();
+const results = [];
+for (const [ownerId, list] of Object.entries(matches)) {
+  const owner = Number(ownerId);
+  for (const m of list) {
+    if (m.yr !== SEASON) continue;
+    // A handful of feed rows omit the opponent; they cannot be rendered.
+    if (!m.oid || !m.o || m.oid === owner) continue;
+    const a = owner < m.oid ? owner : m.oid;
+    const b = owner < m.oid ? m.oid : owner;
+    const key = `${m.d}|${m.t}|${m.r}|${a}|${b}`;
+    if (seenMatch.has(key)) continue;
+    seenMatch.add(key);
+
+    const ownerIsP1 = owner === a;
+    const winnerId = m.w ? owner : m.oid;
+    results.push({
+      date: m.d,
+      event: m.t,
+      round: m.r,
+      surface: m.sfc,
+      level: m.lvl,
+      score: m.sc,
+      winnerId,
+      loserId: winnerId === owner ? m.oid : owner,
+      player1: ownerIsP1 ? owner : m.oid,
+      player2: ownerIsP1 ? m.oid : owner,
+      rank1: ownerIsP1 ? m.rank ?? null : m.orank ?? null,
+      rank2: ownerIsP1 ? m.orank ?? null : m.rank ?? null,
+    });
+  }
+}
+results.sort((a, b) => (a.date < b.date ? 1 : -1));
+
+/** Attach display names from the ranking table, the biography map, or the H2H
+ *  name index — every participant in the data must resolve to something. */
+function displayName(id) {
+  const r = rankById.get(id);
+  if (r) return { name: r.name, country: r.country, rank: r.rank };
+  const b = bios[id];
+  if (b) return { name: b.name, country: b.country, rank: null };
+  const n = names[id];
+  if (n) return { name: n.n, country: n.c, rank: n.r ?? null };
+  return { name: `#${id}`, country: '', rank: null };
+}
+
+/* ------------------------------------------------------------------ */
+/* Player cards                                                        */
+/* ------------------------------------------------------------------ */
+
+const players = rank.players.map((p) => {
+  const b = bios[p.id] || {};
+  const s = stats[p.id] || {};
+  const rec = seasonRecords[p.id]?.[SEASON] || null;
+  const h = history[p.id] || [];
+  return {
+    id: p.id,
+    name: p.name,
+    zh: zh.players?.[p.id] || '',
+    country: p.country,
+    rank: p.rank,
+    points: p.points,
+    move: p.move,
+    played: p.played,
+    birth: p.birth,
+    age: b.age ?? null,
+    height: b.height || '',
+    hand: b.hand || '',
+    highRank: b.sglHighRank ?? null,
+    titles: b.sglCareerTitles ?? null,
+    careerWon: b.sglCareerWon ?? null,
+    careerLost: b.sglCareerLost ?? null,
+    careerPrize: b.careerPrize ?? null,
+    ytdPrize: b.ytdPrize ?? null,
+    season: rec
+      ? { w: rec.w, l: rec.l, titles: rec.titles, finals: rec.finals, last10: rec.last10, surfaces: rec.surfaces }
+      : null,
+    serve: {
+      aces: s.aces ?? null,
+      doubleFaults: s.doubleFaults ?? null,
+      firstServePct: s.firstServePct ?? null,
+      firstServeWonPct: s.firstServeWonPct ?? null,
+      secondServeWonPct: s.secondServeWonPct ?? null,
+      serviceGamesWonPct: s.serviceGamesWonPct ?? null,
+      returnGamesWonPct: s.returnGamesWonPct ?? null,
+      breakPointsSavedPct: s.breakPointsSavedPct ?? null,
+      breakPointsConvertedPct: s.breakPointsConvertedPct ?? null,
+      totalPointsWonPct: s.totalPointsWonPct ?? null,
+    },
+    historyTail: h.slice(-6).map((row) => [row[0], row[1]]),
+  };
+});
+
+/* ------------------------------------------------------------------ */
+/* H2H index (keyed, for the comparison panel)                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Head-to-head data is split in two.
+ *
+ * `h2h-summary.js` carries only the win counts for every pairing (~35k of them)
+ * and loads with the page, so the record is instant for any two players.
+ * `h2h-matches.js` carries the individual meetings and is injected on demand the
+ * first time the panel is opened — the meeting list is the only thing that needs
+ * it, and duplicating it in the initial payload tripled the page weight.
+ *
+ * Pairs reference the shared roster by id rather than embedding a copy of each
+ * player.
+ */
+const h2hRoster = {};
+const roster = (id) => {
+  if (!h2hRoster[id]) {
+    const p = displayName(id);
+    h2hRoster[id] = {
+      id,
+      name: p.name,
+      zh: zh.players?.[id] || '',
+      country: p.country,
+      rank: p.rank,
+    };
+  }
+  return h2hRoster[id];
+};
+
+const MAX_PAIR_MEETINGS = 24;
+const h2hPairs = {};
+const h2hMeetings = {};
+for (const [key, v] of Object.entries(h2h)) {
+  const [a, b] = key.split('-').map(Number);
+  roster(a);
+  roster(b);
+
+  // A meeting appears in both players' logs, so de-duplicate per pair.
+  const seen = new Set();
+  const meetings = [];
+  for (const m of v.meetings) {
+    const k = `${m.d}|${m.t}|${m.r}|${m.sc}`;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    if (meetings.length >= MAX_PAIR_MEETINGS) break;
+    meetings.push([m.d, m.t, m.lvl, m.sfc, m.r, m.sc, m.w]);
+  }
+
+  h2hPairs[key] = { aw: v.aWins, bw: v.bWins, n: v.n ?? v.meetings.length };
+  if (meetings.length) h2hMeetings[key] = meetings;
+}
+
+/* ------------------------------------------------------------------ */
+/* Calendar                                                            */
+/* ------------------------------------------------------------------ */
+
+const calendar = tour.events
+  .filter((e) => e.year >= SEASON - 1)
+  .map((e) => ({
+    name: e.name,
+    zh: zh.tournaments?.[e.name] || '',
+    year: e.year,
+    level: e.level,
+    start: e.start,
+    end: e.end,
+    surface: e.surface,
+    indoor: e.indoor,
+    city: e.city,
+    country: e.country,
+    draw: e.drawSize,
+    prize: e.prize,
+    currency: e.currency,
+    status: e.status,
+    champion: e.champion || null,
+  }))
+  .sort((a, b) => (a.start < b.start ? 1 : -1));
+
+/* ------------------------------------------------------------------ */
+/* Headline statistics                                                 */
+/* ------------------------------------------------------------------ */
+
+const seasonEvents = calendar.filter((e) => e.year === SEASON);
+const pastEvents = seasonEvents.filter((e) => e.status === 'past');
+const upcomingEvents = seasonEvents.filter((e) => e.status !== 'past');
+const seasonMatches = results.length;
+const completedTournaments = champions.filter((c) => c.year === SEASON).length;
+
+const meta = {
+  generatedAt: new Date().toISOString(),
+  season: SEASON,
+  rankingsAsOf: rank.asOf,
+  source: 'WTA official public data API',
+  sourceUrl: 'https://www.wtatennis.com/',
+  depth: rank.depth,
+  counts: {
+    rankedPlayers: rank.players.length,
+    playersWithMatches: Object.keys(matches).length,
+    events: seasonEvents.length,
+    completedEvents: pastEvents.length,
+    upcomingEvents: upcomingEvents.length,
+    seasonMatches,
+    champions: completedTournaments,
+    h2hPairings: Object.keys(h2hPairs).length,
+    calendarEvents: calendar.length,
+  },
+  zh: {
+    countries: zh.countries || {},
+    levels: zh.levels || {},
+    rounds: zh.rounds || {},
+    surfaces: zh.surfaces || {},
+  },
+};
+
+/**
+ * The results panel shows recent form, so the feed is capped; the full season
+ * remains available through the calendar and each player's own page.
+ */
+const RESULT_LIMIT = Number(process.env.WTA_RESULT_LIMIT || 1200);
+const recentResults = results.slice(0, RESULT_LIMIT);
+
+const payload = {
+  meta,
+  players,
+  results: recentResults.map((r) => ({
+    ...r,
+    winner: { id: r.winnerId, ...displayName(r.winnerId), zh: zh.players?.[r.winnerId] || '' },
+    loser: { id: r.loserId, ...displayName(r.loserId), zh: zh.players?.[r.loserId] || '' },
+  })),
+  champions,
+  calendar,
+  boards: boards.boards,
+  career: boards.career,
+  seasonRecords,
+  tournamentZh: zh.tournaments || {},
+  playerIndex: index,
+};
+
+const mainJs = `/* WTA Tour dashboard data — generated ${meta.generatedAt} */\nwindow.WTA_DATA=${JSON.stringify(payload)};\n`;
+await writeFile(resolve(ROOT, 'data', 'dashboard.js'), mainJs, 'utf8');
+
+// The head-to-head index is large and only needed by one panel, so it ships
+// separately and is not part of the initial payload.
+const h2hSummaryJs = `/* Head-to-head summary — generated ${meta.generatedAt} */\nwindow.WTA_H2H=${JSON.stringify({ players: h2hRoster, pairs: h2hPairs })};\n`;
+await writeFile(resolve(ROOT, 'data', 'h2h.js'), h2hSummaryJs, 'utf8');
+
+const h2hMatchesJs = `/* Head-to-head meetings — generated ${meta.generatedAt} */\nwindow.WTA_H2H_MATCHES=${JSON.stringify(h2hMeetings)};\n`;
+await writeFile(resolve(ROOT, 'data', 'h2h-matches.js'), h2hMatchesJs, 'utf8');
+
+const mb = (s) => (Buffer.byteLength(s) / 1024 / 1024).toFixed(1);
+log(
+  'gen',
+  `Done — ${players.length} players, ${recentResults.length} season matches, ` +
+    `${calendar.length} calendar events, ${completedTournaments} champions`,
+);
+log(
+  'gen',
+  `  dashboard.js ${mb(mainJs)} MB · h2h.js ${mb(h2hSummaryJs)} MB · ` +
+    `h2h-matches.js ${mb(h2hMatchesJs)} MB (${Object.keys(h2hPairs).length} pairings, ` +
+    `${Object.keys(h2hRoster).length} players)`,
+);

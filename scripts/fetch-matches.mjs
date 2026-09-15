@@ -9,7 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { ROOT, fetchPlayerMatches, writeJson, log } from './lib.mjs';
 
-const LIMIT = Number(process.env.WTA_MATCH_LIMIT || 120);
+const LIMIT = Number(process.env.WTA_MATCH_LIMIT || 300);
 const FROM_YEAR = Number(process.env.WTA_MATCH_FROM || 2023);
 const PAGES = Number(process.env.WTA_MATCH_PAGES || 10);
 

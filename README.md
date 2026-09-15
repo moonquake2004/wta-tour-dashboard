@@ -1,55 +1,65 @@
-# WTA Tour Dashboard
+# WTA Tour Data Dashboard · 女子网球巡回赛数据看板
 
 **Live:** <https://moonquake2004.github.io/wta-tour-dashboard/>
 
-An independent, open-source, **bilingual (English / 简体中文)** data dashboard for
-the **Hologic WTA Tour**.
+An independent, open-source, **bilingual (English / 简体中文)** results dashboard for
+the **Hologic WTA Tour** — singles world rankings, the season calendar, match
+results, player records, serve and return statistics, career leaders and
+head-to-head records.
 
-Rankings, player profiles, career records, head-to-heads, the tour calendar and
-season statistics — every figure read from the **official WTA data feed** and
-rebuilt into a fast, dependency-free static site.
-
-Every player, tournament, country, round and surface is shown in **both Chinese
-and English** at the same time. A three-way language switch (中/EN · 中文 · EN)
-lets a reader collapse to a single language; the choice persists locally.
-
-> **Data snapshot:** rankings of **31 August 2026** · 300 ranked players · 300 player
-> biographies · 222 calendar events across 2025–2026.
-> Not affiliated with, endorsed by or sponsored by the WTA.
+Every number is read from the **official WTA public data feed** that powers
+`wtatennis.com`. Nothing is modelled, estimated or scraped from HTML.
 
 ---
 
-## Why this exists
+## What the site is
 
-The official WTA site publishes excellent data, but it is built for browsing
-news, not for interrogating numbers. This project takes the same public JSON API
-that powers `wtatennis.com`, normalises it, and presents it as a data tool:
+A single self-contained page with seven tab panels, in the style of a
+broadcast results dashboard:
 
-- a complete, sortable, filterable ranking table with week-on-week movement;
-- player pages that combine career biography, season serve/return splits,
-  five years of ranking history and a full match log;
-- a head-to-head analyser covering every stored meeting between two players;
-- a tour calendar with surfaces, prize money and champions;
-- twelve season leaderboards computed only from figures the tour itself publishes.
+| Panel | 中文 | Contents |
+| --- | --- | --- |
+| Overview | 总览 | Season KPIs, champion wall, latest results, top 10, stat leaders, career leaders |
+| Calendar | 赛程 | Every main-tour event with level, surface, draw, prize money and champion |
+| Results | 赛果 | Season match results with round, event and surface filters |
+| Rankings | 排名 | The official singles ranking with podium, movement and ranking trajectories |
+| Players | 球员 | Player cards with season W–L, form, titles and serve splits |
+| Statistics | 数据 | Twelve season leaderboards, career leaders, level and surface splits |
+| Head-to-head | 交手 | Any two players: career record, every meeting, side-by-side comparison |
 
-Nothing is modelled, estimated or scraped from HTML. If a number is not in the
-official feed, it is not on the site.
+- **Bilingual by default.** Every player, event, country, round and surface is
+  shown in Chinese and English at once; a three-way switch (`中/EN · 中文 · EN`)
+  collapses to one language and the choice persists locally.
+- **Player detail modal** — click any player anywhere for season records by year,
+  serve splits, career highs and prize money.
+- **No runtime requests for content.** The payload is loaded as a plain script
+  global, so the published site is `index.html` + two assets + two data files.
 
 ---
 
 ## Data sources
 
-Everything comes from the public JSON API behind `wtatennis.com`:
+All content comes from the public JSON API behind `wtatennis.com`:
 
 | Endpoint | Used for |
 | --- | --- |
 | `GET /tennis/players/ranked` | Official singles ranking table (`type=rankSingles`) |
 | `GET /tennis/players/{id}/detailed` | Biography: career W–L, titles, career high, prize money |
-| `GET /tennis/players/{id}/year/{season}` | Season serve &amp; return statistics |
-| `GET /tennis/players/{id}/ranking` | Week-by-week singles/doubles ranking history |
-| `GET /tennis/players/{id}/matches` | Complete singles and doubles match log |
+| `GET /tennis/players/{id}/year/{season}` | Season serve and return statistics |
+| `GET /tennis/players/{id}/ranking` | Week-by-week singles and doubles ranking history |
+| `GET /tennis/players/{id}/matches` | Complete singles match log |
 | `GET /tennis/players/{id}/headtohead/{opp}` | Career head-to-head and every meeting |
 | `GET /tennis/tournaments` | Tour calendar, draws, surfaces, prize money, champions |
+
+### Two constraints that shaped the architecture
+
+1. **The API caps a page at 100 rows**, so ranking depth and match logs are
+   fetched page by page. The match feed ignores date filters, so the pipeline
+   binary-searches the pages to find each season's window.
+2. **The API rejects cross-origin browser requests** — it answers `HTTP 403` to
+   any `Origin` that is not `wtatennis.com`. The site therefore cannot call it at
+   runtime; everything, including head-to-head records, is pre-computed at build
+   time and shipped as static data.
 
 ### Chinese localisation sources
 
@@ -60,21 +70,10 @@ sources rather than guesswork:
 | --- | --- |
 | Player names | **Wikidata**, joined on property **P597** (the WTA player id) |
 | Traditional → Simplified | **MediaWiki `zh-hans` variant converter** |
-| Tournament names | Curated dictionary for the majors and WTA 1000 events, then Wikidata, then a city-name rule |
-| Countries | Curated IOC-code table (117 entries) |
+| Tournament names | Curated dictionary for the majors and WTA 1000 events, then Wikidata, then a host-city rule |
+| Countries | Curated IOC-code table |
 | Rounds, surfaces, levels | Curated tennis terminology |
 | ~8% of players | Curated transliterations following each source language's conventions |
-
-Current coverage: **300 / 300** ranked players, **670** tournament names covering
-**100%** of matches in the log, and **61 / 61** country codes used by the data.
-
-### Two constraints that shaped the architecture
-
-1. **The API caps a page at 100 rows.** Ranking depth is fetched page by page.
-2. **The API rejects cross-origin browser requests.** It answers `HTTP 403` to
-   any `Origin` header that is not `wtatennis.com`, so the site *cannot* call it
-   from the browser. Everything, including head-to-head records, is therefore
-   pre-computed at build time and shipped as static JSON.
 
 ---
 
@@ -82,75 +81,72 @@ Current coverage: **300 / 300** ranked players, **670** tournament names coverin
 
 ```
 wta-dashboard/
-├── scripts/                 Node data pipeline (no dependencies)
-│   ├── lib.mjs              API client, politeness gate, retry, file helpers
-│   ├── build.mjs            full refresh: rankings → players → matches → … → derive
-│   ├── refresh-rankings.mjs fast weekly refresh (rankings + derived only)
-│   ├── fetch-rankings.mjs   official singles ranking table + search index
-│   ├── fetch-players.mjs    biographies, season statistics, ranking history
-│   ├── fetch-matches.mjs    singles match logs (binary page search by season)
-│   ├── fetch-tournaments.mjs  tour calendar with champions
-│   ├── fetch-h2h.mjs        folds match logs into a pairwise head-to-head index
-│   ├── derive.mjs           leaderboards, season W–L, career leaders
-│   ├── compact.mjs          downsamples history and trims logs
-│   ├── site.mjs             assembles the publishable site into docs/
-│   └── serve.mjs            zero-dependency preview server
-├── site/                    front end (vanilla ES modules, no build step)
-│   ├── index.html
+├── scripts/                     Node data pipeline (no dependencies)
+│   ├── lib.mjs                  API client, politeness gate, retry, file helpers
+│   ├── build.mjs                full refresh: fetch → derive → generate → assemble → verify
+│   ├── refresh-rankings.mjs     light weekly refresh
+│   ├── fetch-rankings.mjs       official singles ranking table + search index
+│   ├── fetch-players.mjs        biographies, season statistics, ranking history
+│   ├── fetch-matches.mjs        singles match logs (binary page search by season)
+│   ├── fetch-tournaments.mjs    tour calendar with champions
+│   ├── fetch-h2h.mjs            folds match logs into a pairwise head-to-head index
+│   ├── fetch-zh.mjs             Chinese names from Wikidata + variant conversion
+│   ├── zh-terms.mjs             terminology tables, SPARQL and conversion helpers
+│   ├── derive.mjs               leaderboards, season W–L, career leaders
+│   ├── compact.mjs              downsamples history, trims payloads
+│   ├── generate-data.mjs        → data/dashboard.js + data/h2h.js
+│   ├── build-site.mjs           → docs/ (publishable site + SEO files)
+│   ├── verify.mjs               raw snapshot integrity (36 assertions)
+│   ├── verify-dashboard.mjs     dashboard payload integrity (37 assertions)
+│   └── serve.mjs                zero-dependency preview server
+├── site-v2/                     front end (single page, no build step)
+│   ├── index.html               7 tab panels, bilingual markup
 │   └── assets/
-│       ├── app.css          design system + components
-│       ├── app.js           hash router and shell
-│       ├── data.js          lazy JSON loading with memoisation
-│       ├── ui.js            charts (hand-rolled SVG), chrome, search, tables
-│       ├── utils.js         formatting, escaping, DOM helpers
-│       └── pages/           home, rankings, players, player, compare, calendar, stats, about
-├── data/                    generated JSON snapshots (committed)
-└── docs/                    generated publishable site (served by GitHub Pages)
+│       ├── css/style.css        court-material design system
+│       ├── js/app.js            rendering, tabs, bilingual switch, modal, H2H
+│       └── og-cover.png         social share card
+├── data/                        generated snapshots (committed)
+└── docs/                        generated publishable site (served by Pages)
 ```
 
 ---
 
 ## Local development
 
-Requires **Node.js 20+**. There are no npm dependencies.
+Requires **Node.js 20+**. No npm dependencies.
 
 ```bash
-# 1. assemble the publishable site from site/ + data/
-node scripts/site.mjs
+# regenerate the dashboard payload and assemble the site
+node scripts/generate-data.mjs
+node scripts/build-site.mjs
 
-# 2. preview it (ES modules need HTTP, not file://)
+# preview (defaults to docs/)
 node scripts/serve.mjs            # http://127.0.0.1:4173
 ```
 
-To work on the front end without copying data around, serve `site/` instead —
-it reads `../data` directly:
+### Refreshing data
 
 ```bash
-WTA_SERVE=site node scripts/serve.mjs
-```
-
-### Refreshing the data
-
-```bash
-# rankings only — two API calls plus derived aggregates (~30 s)
+# light weekly refresh: rankings → derived → Chinese names → payload → site → verify
 node scripts/refresh-rankings.mjs
 
-# everything: rankings, 300 biographies, match logs, calendar, H2H (~12 min)
+# everything: rankings, 300 biographies, 300 match logs, calendar, H2H (~15 min)
 node scripts/build.mjs
 
-# partial runs
+# partial
 node scripts/build.mjs --skip-players --skip-matches
-WTA_MATCH_LIMIT=60 WTA_WORKERS=6 node scripts/build.mjs
+WTA_MATCH_LIMIT=120 WTA_WORKERS=6 node scripts/build.mjs
 ```
 
 Useful environment variables:
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `WTA_RANK_DEPTH` | `300` | How many ranked players to store |
-| `WTA_PLAYER_LIMIT` | `300` | How many player records to fetch |
-| `WTA_MATCH_LIMIT` | `120` | How many players get a stored match log |
-| `WTA_MATCH_FROM` | `2023` | Earliest season in the stored match log |
+| `WTA_RANK_DEPTH` | `300` | Ranked players to store |
+| `WTA_PLAYER_LIMIT` | `300` | Player records to fetch |
+| `WTA_MATCH_LIMIT` | `300` | Players given a stored match log |
+| `WTA_MATCH_FROM` | `2023` | Earliest season in the match log |
+| `WTA_RESULT_LIMIT` | `1200` | Matches kept in the results feed |
 | `WTA_HISTORY_WEEKS` | `261` | Ranking-history window (weeks) |
 | `WTA_WORKERS` | `4` | Concurrent player fetches |
 | `WTA_CONCURRENCY` | `5` | Concurrent HTTP requests |
@@ -163,53 +159,36 @@ and exponential backoff. Please keep the defaults modest.
 
 ## Deploying
 
-The site is published with **GitHub Pages** from the `docs/` folder:
+Published with **GitHub Pages** from the `docs/` folder:
 
-1. `node scripts/site.mjs` assembles `docs/`.
+1. `node scripts/build-site.mjs` assembles `docs/`.
 2. Commit and push to the default branch.
-3. In **Settings → Pages**, set *Source* to `Deploy from a branch` and choose
-   `main` / `/docs`.
+3. **Settings → Pages** → *Deploy from a branch* → `main` / `/docs`.
 
-A scheduled workflow (`.github/workflows/refresh.yml`) refreshes the rankings
-every Monday, when the WTA publishes its new list.
+`.github/workflows/refresh.yml` refreshes the rankings every Monday, when the
+WTA publishes its new list.
 
-### Why a hash router?
-
-The front end is a single HTML entry point with `#/route` URLs. GitHub Pages
-serves static files only, so hash routing gives working deep links, zero server
-configuration and no 404 handling. A `404.html` bounce is included for the
-unlikely case of a path-style URL.
+Navigation uses hash routes (`#rankings`, `#h2h`, …) so deep links work on
+static hosting with no server configuration.
 
 ---
 
 ## Interpretation notes
 
-- **Ranking weeks.** The WTA publishes rankings on Mondays. The date shown across
-  the site is the week the snapshot belongs to, not the day it was downloaded.
+- **Ranking weeks.** The WTA publishes rankings on Mondays. The date shown is the
+  week the snapshot belongs to, not the day it was downloaded.
 - **Movement.** The arrow compares this week's position with the previous
   published week, exactly as the official table reports it.
 - **Season W–L.** Counted from the official match log, excluding walkovers and
-  byes that carry no score, so it reconciles with the tour's own season records
-  (for example Sabalenka's 40–8 in 2026).
+  byes that carry no score, so it reconciles with the tour's own season records.
 - **`winner` semantics.** In the match feed, `winner` is the slot of the player
-  who **lost** (`1` ⇒ player_1 won). This is verified against well-known results.
+  who **lost** (`1` ⇒ player_1 won). Verified against well-known results.
+- **Champions.** Taken from the tournament feed. A few lower-tier completed
+  events have no singles champion published yet; those rows show `—`.
 - **Aces.** Ace totals depend on each venue's line-calling technology and are not
   perfectly comparable between events.
 - **Biographies.** Career highs, titles and prize money come verbatim from the
-  tour's biography records; each player page shows the WTA's own "last updated"
-  date.
-
-## Coverage
-
-| Dataset | Depth |
-| --- | --- |
-| Singles ranking | Top 300 |
-| Biographies | Top 300 |
-| Season statistics | Top 300 (where published) |
-| Ranking history | Top 300, trailing five years, weekly |
-| Match logs | Top 120, 2023 onwards |
-| Head-to-head | Every pairing inside the stored match window |
-| Tour calendar | 2025 and 2026, all main-tour levels |
+  tour's biography records, whose "last updated" date is shown per player.
 
 ## Licence and attribution
 

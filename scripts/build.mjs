@@ -4,9 +4,13 @@
  * regenerate the derived aggregates.
  *
  * Usage:
- *   node scripts/build.mjs             # full refresh
+ *   node scripts/build.mjs             # full refresh + site assembly
  *   WTA_RANK_DEPTH=100 node scripts/build.mjs
  *   node scripts/build.mjs --skip-tournaments
+ *
+ * The last three steps are what turn the raw snapshots into the published
+ * dashboard: generate-data.mjs folds them into the payload, build-site.mjs
+ * assembles docs/, and verify-dashboard.mjs asserts the payload is publishable.
  */
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';

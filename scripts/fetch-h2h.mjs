@@ -102,16 +102,6 @@ for (const [key, bucket] of pairs) {
 // dashboard itself reads the bundled script below.
 await writeJson('data/h2h.json', out);
 await writeJson('data/h2h-names.json', names);
-
-// The comparison page must not pay a second round trip for this large payload,
-// so it is published as a plain script that assigns a global.  Classic scripts
-// parse noticeably faster than JSON.parse() on multi-megabyte payloads.
-const js = `/* Head-to-head index — generated ${new Date().toISOString()} */\n` +
-  `window.__WTA_H2H__=${JSON.stringify({ names, pairs: out })};\n`;
-const jsPath = resolve(ROOT, 'site', 'assets', 'h2h-data.js');
-await writeFile(jsPath, js, 'utf8');
-log('h2h', `  ✓ site/assets/h2h-data.js (${(Buffer.byteLength(js) / 1024 / 1024).toFixed(1)} MB)`);
-
 log(
   'h2h',
   `Done — ${Object.keys(out).length} pairings, ${meetings} meetings, ${Object.keys(names).length} named players.`,

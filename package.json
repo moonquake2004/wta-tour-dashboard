@@ -20,13 +20,10 @@
     "build": "node scripts/build.mjs",
     "build:light": "node scripts/build.mjs --skip-players --skip-matches",
     "refresh": "node scripts/refresh-rankings.mjs",
-    "data:h2h": "node scripts/fetch-h2h.mjs",
-    "data:derive": "node scripts/derive.mjs",
-    "site": "node scripts/site.mjs",
+    "data": "node scripts/generate-data.mjs",
+    "site": "node scripts/build-site.mjs",
     "serve": "node scripts/serve.mjs",
-    "dev": "node scripts/site.mjs && node scripts/serve.mjs",
-    "publish": "node scripts/build.mjs && node scripts/site.mjs",
-    "verify": "node scripts/verify.mjs",
-    "check": "node scripts/verify.mjs && node scripts/site.mjs"
+    "verify": "node scripts/verify.mjs && node scripts/verify-dashboard.mjs",
+    "publish": "node scripts/generate-data.mjs && node scripts/build-site.mjs && node scripts/verify-dashboard.mjs"
   }
 }

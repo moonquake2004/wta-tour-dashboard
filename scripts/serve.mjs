@@ -3,7 +3,7 @@
  * Zero-dependency static file server for local development.
  *
  *   node scripts/serve.mjs [port]     # serves docs/ (the assembled site)
- *   WTA_SERVE=site node scripts/serve.mjs
+ *   WTA_SERVE=site-v2 node scripts/serve.mjs
  *
  * ES modules cannot be loaded over file://, so the site must be previewed over
  * HTTP.  This server exists only for local preview; production is GitHub Pages.
@@ -14,7 +14,9 @@ import { extname, join, normalize, resolve } from 'node:path';
 import { ROOT } from './lib.mjs';
 
 const port = Number(process.argv[2] || process.env.PORT || 4173);
-const source = process.env.WTA_SERVE === 'site' ? 'site' : 'docs';
+// `docs/` is the assembled site (default). `site-v2/` is the front-end source
+// and needs ../data mapped in, so previews normally use docs/.
+const source = process.env.WTA_SERVE === 'site-v2' ? 'site-v2' : 'docs';
 const root = resolve(ROOT, source);
 
 if (source === 'docs') {
@@ -22,7 +24,7 @@ if (source === 'docs') {
   try {
     await stat(join(root, 'data'));
   } catch {
-    console.error('docs/data is missing — run `node scripts/site.mjs` first.');
+    console.error('docs/data is missing — run `node scripts/build-site.mjs` first.');
     process.exit(1);
   }
 }

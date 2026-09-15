@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://moonquake2004.github.io/wta-tour-dashboard/sitemap.xml
