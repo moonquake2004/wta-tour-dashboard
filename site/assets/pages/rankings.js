@@ -251,8 +251,9 @@ export async function render(host) {
       .map(
         (p) => `<tr class="clickable ${p.rank <= 3 ? 'top3' : ''}" data-href="#/player/${p.id}">
           <td class="l rank-cell ${p.rank <= 3 ? 'top' : ''}">${p.rank}</td>
-          <td class="l">${playerCell(p, { size: 32 })}</td>
-          <td class="c">${countryName(p.country)}</td>
+          <td class="l">${playerCell(p, { size: 32, country: false })}</td>
+          <td class="c"><span class="flag">${esc(p.country || '')}</span>
+            <span class="dim" style="font-size:12px;margin-left:5px">${esc(countryZh(p.country))}</span></td>
           <td>${movement(p.move)}</td>
           <td class="hide-sm num dim">${p.played ?? '—'}</td>
           <td class="num">${int(p.points)}</td>

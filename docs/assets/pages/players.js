@@ -157,8 +157,9 @@ export async function render(host) {
       .map(
         (p) => `<tr class="clickable ${p.rank <= 3 ? 'top3' : ''}" data-href="#/player/${p.id}">
           <td class="l rank-cell ${p.rank <= 3 ? 'top' : ''}">${p.rank}</td>
-          <td class="l">${playerCell(p, { size: 32 })}</td>
-          <td class="c hide-sm">${countryName(p.country)}</td>
+          <td class="l">${playerCell(p, { size: 32, meta: false })}</td>
+          <td class="c hide-sm"><span class="flag">${esc(p.country || '')}</span>
+            <span class="dim" style="font-size:12px;margin-left:5px">${esc(countryZh(p.country))}</span></td>
           <td class="hide-sm num dim">${p.age ?? '—'}</td>
           <td class="hide-sm num dim">${p.highRank ? `No.${p.highRank}` : '—'}</td>
           <td class="num">${p.titles ?? '—'}</td>

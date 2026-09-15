@@ -168,19 +168,34 @@ export function levelTag(level) {
   return `<span class="tag ${cls}">${zh ? pair(zh, en) : esc(en)}</span>`;
 }
 
-export function playerCell(p, { size = 34, showRank = false, meta = true } = {}) {
+/**
+ * Player avatar + bilingual name.
+ *
+ * `country` and `showRank` control the small meta line under the name.  Tables
+ * that already carry a Country column pass `country: false` so the flag and
+ * country name are not printed twice in the same row.
+ */
+export function playerCell(
+  p,
+  { size = 34, showRank = false, country = true, meta = true } = {},
+) {
+  const showCountry = meta && country;
+  const metaLine =
+    showCountry || (showRank && p.rank)
+      ? `<div class="row" style="gap:7px;margin-top:2px">
+          ${showCountry ? countryName(p.country) : ''}
+          ${
+            showRank && p.rank
+              ? `<span class="num dim" style="font-size:11px">No.${p.rank}</span>`
+              : ''
+          }
+        </div>`
+      : '';
   return `<div class="p-cell">
     ${avatar(p.id, p.name, size)}
     <div style="min-width:0">
       <a class="p-name" href="#/player/${p.id}">${playerName(p)}</a>
-      <div class="row" style="gap:7px;margin-top:2px">
-        ${meta ? countryName(p.country) : ''}
-        ${
-          showRank && p.rank
-            ? `<span class="num dim" style="font-size:11px">No.${p.rank}</span>`
-            : ''
-        }
-      </div>
+      ${metaLine}
     </div>
   </div>`;
 }
