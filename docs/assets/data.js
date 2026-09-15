@@ -8,13 +8,24 @@
 
 const CACHE = new Map();
 
+/**
+ * Snapshot directory, resolved against THIS MODULE rather than the document.
+ *
+ * `document.baseURI` for a hash-routed page is `<...>/wta-tour-dashboard/#/rankings`:
+ * its pathname is the directory with a trailing slash, so a naive
+ * `fetch('../data/x.json')` climbs out of the project subpath and hits the domain
+ * root.  Resolving from `import.meta.url` is unambiguous and works identically on
+ * GitHub Pages, on a custom domain and on localhost.
+ */
+const DATA_BASE = new URL('../../data/', import.meta.url);
+
 /** Bumped on every build so GitHub Pages / browsers never serve stale snapshots. */
 export const BUILD_ID = window.__WTA_BUILD__ || String(Date.now());
 
 export async function load(name) {
   if (CACHE.has(name)) return CACHE.get(name);
   const promise = (async () => {
-    const url = `../data/${name}.json?v=${BUILD_ID}`;
+    const url = new URL(`${name}.json?v=${BUILD_ID}`, DATA_BASE).href;
     const res = await fetch(url, { cache: 'default' });
     if (!res.ok) throw new Error(`${name}: HTTP ${res.status}`);
     return res.json();
@@ -79,14 +90,4 @@ export function formatDate(value, { long = false } = {}) {
     year: 'numeric',
     timeZone: 'UTC',
   });
-}
-
-/** Official head-to-head record for any two players, straight from the WTA API. */
-export async function headToHead(a, b) {
-  const url = `https://api.wtatennis.com/tennis/players/${a}/headtohead/${b}`;
-  const res = await fetch(url, {
-    headers: { Accept: 'application/json' },
-  });
-  if (!res.ok) throw new Error(`H2H request failed (HTTP ${res.status})`);
-  return res.json();
 }
