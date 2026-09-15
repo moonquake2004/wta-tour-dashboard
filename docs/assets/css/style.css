@@ -1021,3 +1021,37 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
   display:inline-flex;align-items:center;min-height:24px
 }
 .ev-side .ev-nm{min-height:26px}
+
+/* ==========================================================================
+   筛选标签与交手选择行
+   --------------------------------------------------------------------------
+   无 JS 版用 <a> 代替按钮，因此这些类需要自己的样式（旧样式只覆盖了 button）。
+   ========================================================================== */
+.chip{display:inline-flex;align-items:center;min-height:30px;padding:5px 12px;
+  border-radius:100px;border:1px solid var(--line);background:rgba(0,0,0,.22);
+  font-size:12.5px;font-family:var(--font-cn);color:var(--ivory-dim);
+  transition:border-color .15s,background .15s,color .15s;white-space:nowrap}
+.chip:hover{border-color:var(--grass-500);color:var(--ivory);background:rgba(42,176,114,.14)}
+.chips,.filter-bar .chips{display:flex;flex-wrap:wrap;gap:7px}
+
+.h2h-column{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));
+  gap:1px;background:rgba(255,255,255,.07);border-radius:var(--radius-sm);
+  overflow:hidden;max-height:none}
+.h2h-pick-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;
+  align-items:center;min-height:44px;padding:8px 13px;background:rgba(0,0,0,.22);
+  font-family:var(--font-cn);transition:background .13s}
+.h2h-pick-row:hover{background:rgba(42,176,114,.16)}
+.h2h-pick-row .sn{display:flex;flex-direction:column;min-width:0}
+.h2h-pick-row .sn b{font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.h2h-pick-row .sn .en{font-family:var(--font-en);font-size:10px;opacity:.6;margin:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.h2h-pick-row .sr{font-family:var(--font-en);font-size:11px;color:var(--ivory-mute);
+  white-space:nowrap}
+.h2h-col-head{font-family:var(--font-cn);font-size:12px;color:var(--ivory-mute);
+  padding:0 0 8px}
+.h2h-steps{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:14px;
+  font-family:var(--font-cn);font-size:13px;color:var(--ivory-dim)}
+.h2h-step{display:inline-flex;align-items:center;gap:8px}
+.h2h-step .n{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;
+  background:var(--grass-600);color:#fff;font-family:var(--font-en);font-size:11px}
