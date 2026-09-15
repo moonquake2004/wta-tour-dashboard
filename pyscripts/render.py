@@ -152,6 +152,13 @@ class Context:
         self.h2h_pairs = h2h.get("pairs", {})
         self.counts = self.meta.get("counts", {})
         self.stamp = (self.meta.get("generatedAt") or "")[:19]
+        # Pairing pages are generated for the top N only; filled in by build_site
+        # so every renderer can tell a real link from one that would 404.
+        self.pair_ids: set[int] = set()
+        self.pair_roster: list[dict] = []
+
+    def has_pair_page(self, a: int, b: int) -> bool:
+        return a in self.pair_ids and b in self.pair_ids
 
     # -- lookups ---------------------------------------------------------
     def player(self, pid) -> dict:

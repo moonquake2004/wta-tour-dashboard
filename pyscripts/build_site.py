@@ -33,9 +33,38 @@ def load_globals(name: str, global_name: str):
     return json.loads(match.group(1))
 
 
+def _rivals_for(ctx, pid: int, others: list[int], limit: int = 30) -> list[dict]:
+    """
+    Head-to-head summary for one player against a set of opponents.
+
+    Only opponents inside the generated pairing range are returned; anything else
+    would render a link to a page that does not exist.
+    """
+    rows = []
+    for other in others:
+        if ctx.pair_ids and other not in ctx.pair_ids:
+            continue
+        if other == pid:
+            continue
+        key = f"{min(pid, other)}-{max(pid, other)}"
+        record = ctx.h2h_pairs.get(key)
+        if not record:
+            continue
+        is_low = pid < other
+        rows.append({
+            "id": other,
+            "player": ctx.player(other),
+            "wins": record["aw"] if is_low else record["bw"],
+            "losses": record["bw"] if is_low else record["aw"],
+            "meetings": record.get("n", 0),
+        })
+    rows.sort(key=lambda r: (-(r["wins"] + r["losses"]), r["player"].get("rank") or 9999))
+    return rows[:limit]
+
+
 def build_h2h_pairs(ctx: Context, depth: int = pages.H2H_DEPTH) -> list[tuple[int, int]]:
     """Pairings generated as their own pages: every combination inside the top N."""
-    roster = ctx.players[:depth]
+    roster = ctx.pair_roster or ctx.players[:depth]
     pairs = []
     for i, a in enumerate(roster):
         for b in roster[i + 1:]:
@@ -52,6 +81,12 @@ def main() -> int:
     h2h_meetings = load_globals("h2h-matches.js", "WTA_H2H_MATCHES")
 
     ctx = Context(data, events, h2h)
+    # The top N by ranking, which is the range pairing pages are generated for.
+    # Declared before anything renders so no link points at a page that will not
+    # exist — this is the single definition of "in range" for the whole builder.
+    pair_ids = {p["id"] for p in ctx.players[:pages.H2H_DEPTH]}
+    ctx.pair_ids = pair_ids
+    ctx.pair_roster = [p for p in ctx.players if p["id"] in pair_ids]
     out = ROOT / "docs"
     if out.exists():
         shutil.rmtree(out)
@@ -78,30 +113,51 @@ def main() -> int:
     log("site", f"  ✓ 6 panels")
 
     # --------------------------------------------------------- player profiles
-    rival_ids = [p["id"] for p in ctx.players[:30]]
+    rival_ids = [p["id"] for p in ctx.players[:30] if p["id"] in pair_ids]
     for player in ctx.players:
         pid = player["id"]
         # Head-to-head summary against the current top 30.
-        rivals = []
-        for other in rival_ids:
-            if other == pid:
-                continue
-            key = f"{min(pid, other)}-{max(pid, other)}"
-            record = ctx.h2h_pairs.get(key)
-            if not record:
-                continue
-            is_low = pid < other
-            rivals.append({
-                "id": other,
-                "player": ctx.player(other),
-                "wins": record["aw"] if is_low else record["bw"],
-                "losses": record["bw"] if is_low else record["aw"],
-                "meetings": record.get("n", 0),
-            })
-        rivals.sort(key=lambda r: (-(r["wins"] + r["losses"]), r["player"].get("rank") or 999))
+        rivals = _rivals_for(ctx, pid, rival_ids, limit=30)
         write(f"player-{pid}.html",
               pages.player_page(ctx, player, rivals, _recent_matches(data, pid)))
     log("site", f"  ✓ {len(ctx.players)} player profiles")
+
+    # Every opponent named anywhere on the site also gets a page, otherwise the
+    # event draws and match logs would link to files that do not exist.
+    ranked_ids = {p["id"] for p in ctx.players}
+    extra = 0
+    for pid_str, entry in ctx.h2h_players.items():
+        pid = int(pid_str)
+        if pid in ranked_ids:
+            continue
+        rivals = _rivals_for(ctx, pid, sorted(ranked_ids), limit=60)
+        write(f"player-{pid}.html", pages.player_page_light(ctx, entry, rivals))
+        extra += 1
+    log("site", f"  ✓ {extra} additional player pages (outside the ranking table)")
+
+    # Qualifying-only entrants never meet a ranked player, so they are absent from
+    # the head-to-head index.  Their identity is still in the draw, which is enough
+    # for a page and keeps every generated link resolvable.
+    draw_players: dict[int, dict] = {}
+    for event in events.values():
+        for rnd in event["rounds"]:
+            for match in rnd["matches"]:
+                for side in ("a", "b"):
+                    entry = match[side]
+                    draw_players.setdefault(entry["id"], {
+                        "id": entry["id"],
+                        "name": entry["name"],
+                        "zh": entry.get("zh") or "",
+                        "country": entry.get("country") or "",
+                        "rank": None,
+                    })
+    draw_only = 0
+    for pid, entry in draw_players.items():
+        if pid in ranked_ids or str(pid) in ctx.h2h_players:
+            continue
+        write(f"player-{pid}.html", pages.player_page_light(ctx, entry, []))
+        draw_only += 1
+    log("site", f"  ✓ {draw_only} qualifying-only player pages")
 
     # ------------------------------------------------------------ event pages
     for key, event in events.items():
@@ -110,15 +166,23 @@ def main() -> int:
 
     # ------------------------------------------------------------ head-to-head
     pairs = build_h2h_pairs(ctx)
-    write("h2h.html", pages.h2h_hub(ctx, pairs))
+    roster = ctx.pair_roster
+    write("h2h.html", pages.h2h_hub(ctx, roster))
+
+    # Step two of the flow: one opponent picker per player inside the range.
+    for player in roster:
+        opponents = [o for o in roster if o["id"] != player["id"]]
+        write(f'h2h-pick-{player["id"]}.html', pages.h2h_pick(ctx, player, opponents))
     for a_id, b_id in pairs:
-        # The index keys every pairing with the smaller id first.
-        key = f"{min(a_id, b_id)}-{max(a_id, b_id)}"
+        # Filename and index key both use the smaller id first, so a pairing has
+        # exactly one URL no matter which order the players were listed in.
+        low, high = min(a_id, b_id), max(a_id, b_id)
+        key = f"{low}-{high}"
         record = ctx.h2h_pairs.get(key)
         meetings = h2h_meetings.get(key, [])
-        write(f"h2h-{a_id}-{b_id}.html",
+        write(f"h2h-{low}-{high}.html",
               pages.h2h_pair(ctx, ctx.player(a_id), ctx.player(b_id), record, meetings))
-    log("site", f"  ✓ 1 hub + {len(pairs)} pairing pages")
+    log("site", f"  ✓ 1 hub + {len(roster)} pickers + {len(pairs)} pairing pages")
 
     # ------------------------------------------------------------------- SEO
     stamp = ctx.stamp.replace("-", "").replace(":", "").replace("T", "")

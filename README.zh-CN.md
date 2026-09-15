@@ -24,7 +24,8 @@
 | `players.html` | 球员 | 全部排名球员卡片，可按国家筛选 |
 | `player-<id>.html` | 球员档案 | 档案、分赛季战绩、发球数据、对前 30 的交手战绩 |
 | `stats.html` | 数据 | 12 个赛季数据榜 + 生涯领跑榜 |
-| `h2h.html` | 交手 | 对阵枢纽——从前 50 中选两位球员 |
+| `h2h.html` | 交手 | 对阵枢纽——第一步：从前 50 中选一位球员 |
+| `h2h-pick-<id>.html` | 交手 | 第二步：选择该球员的对手 |
 | `h2h-<a>-<b>.html` | 交手对比 | 交手记录、逐场明细、逐项数据对比 |
 | `event-<id>-<year>.html` | 赛事赛果 | 该站完整单打签表，按轮次排列，含资格赛 |
 
@@ -92,6 +93,7 @@ wta-dashboard/
 │   ├── templates.py             页面外壳、页头页脚
 │   ├── pages.py                 七个面板 + 两类详情页
 │   ├── build_site.py            → docs/（1700+ 预渲染页面 + SEO 文件）
+│   ├── check_links.py           链接检查（4500+ 页面，全部内部链接）
 │   ├── verify.py                原始快照校验（29 项）
 │   ├── verify_dashboard.py      数据载荷校验（46 项）
 │   ├── compare_outputs.py       快照逐字段对比工具

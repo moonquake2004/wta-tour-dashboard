@@ -27,7 +27,8 @@ pages are static documents, and the site works with **JavaScript switched off**.
 | `players.html` | 球员 | Every ranked player as a card, grouped by country |
 | `player-<id>.html` | 球员档案 | Biography, record by season, serve splits, head-to-head vs the top 30 |
 | `stats.html` | 数据 | Twelve season leaderboards plus career leaders |
-| `h2h.html` | 交手 | Pairing hub — pick two players from the top 50 |
+| `h2h.html` | 交手 | Pairing hub — step one, pick a player from the top 50 |
+| `h2h-pick-<id>.html` | 交手 | Step two — pick that player's opponent |
 | `h2h-<a>-<b>.html` | 交手对比 | Career record, every meeting, side-by-side comparison |
 | `event-<id>-<year>.html` | 赛事赛果 | The complete singles draw, round by round, qualifying included |
 
@@ -107,6 +108,7 @@ wta-dashboard/
 │   ├── templates.py             document shell, header, footer
 │   ├── pages.py                 the seven panels and the two detail page kinds
 │   ├── build_site.py            → docs/ (1,700+ pre-rendered pages + SEO files)
+│   ├── check_links.py           verifies every internal link resolves (4,500+ pages)
 │   ├── verify.py                raw snapshot integrity (29 assertions)
 │   ├── verify_dashboard.py      payload integrity (46 assertions)
 │   ├── compare_outputs.py       field-by-field snapshot comparison tool

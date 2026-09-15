@@ -579,52 +579,76 @@ BOARD_NOTES = {
 H2H_DEPTH = 50
 
 
-def h2h_hub(ctx: Context, pairs: list[tuple[int, int]]) -> str:
+def h2h_hub(ctx: Context, roster: list[dict]) -> str:
     """
-    The comparison hub.
+    Step one of two: choose the first player.
 
-    A pairing page is a generated file, so the hub offers two ranked columns: pick
-    from the left, then the right.  Both columns cover the top 100, which is what
-    readers actually compare.
+    A pairing needs two players and the site is static, so the comparison is a
+    two-step flow — pick a player here, then pick their opponent on that player's
+    page.  Every combination inside the generated range is one URL away.
     """
-    roster = ctx.players[:H2H_DEPTH]
-    ready = {frozenset(p) for p in pairs}
-
-    def column(prefix: str, exclude: int | None) -> str:
-        items = []
-        for p in roster:
-            if exclude is not None and p["id"] == exclude:
-                continue
-            items.append(
-                f'<a class="h2h-pick-row" href="{prefix}-{p["id"]}.html">'
-                f'{avatar(ctx, p, 26)}'
-                f'<span class="sn"><b>{esc(p.get("zh") or p["name"])}</b>'
-                f'<span class="en">{esc(p["name"])}</span></span>'
-                f'<span class="sr">#{p["rank"]} {esc(p["country"])}</span></a>'
-            )
-        return f'<div class="h2h-column">{"".join(items)}</div>'
-
+    cards = "".join(
+        f'<a class="h2h-pick-row" href="h2h-pick-{p["id"]}.html">'
+        f'{avatar(ctx, p, 30)}'
+        f'<span class="sn"><b>{esc(p.get("zh") or p["name"])}</b>'
+        f'<span class="en">{esc(p["name"])}</span></span>'
+        f'<span class="sr">#{p["rank"]} {esc(p["country"])}</span></a>'
+        for p in roster
+    )
     body = f'''
 <div class="wrap">
   {page_head("Head-to-head · 交手对比", "", "两位球员对比", "Compare two players",
-             "选择球员一，再从右侧列表选择球员二，即可查看两人的完整交手记录与数据对比。",
-             "Pick a player on the left, then one on the right, to see their full head-to-head record and a statistical comparison.")}
+             "先选择球员一，再在她的页面上选择球员二，即可查看两人的完整交手记录与数据对比。",
+             "Pick a player first, then pick their opponent on the next page to see the full head-to-head record.")}
   <div class="panel"><div class="card-bd">
     <div class="h2h-steps">
       <div class="h2h-step"><span class="n">1</span>{bi("选择球员一", "Pick player one")}</div>
       <div class="h2h-step"><span class="n">2</span>{bi("再选球员二", "Then pick player two")}</div>
     </div>
-    <div class="h2h-columns">
-      <div><div class="h2h-col-head">{bi("球员一（前 50）", "Player one (top 50)")}</div>{column("h2h-a", None)}</div>
-      <div><div class="h2h-col-head">{bi("球员二（前 50）", "Player two (top 50)")}</div>{column("h2h-b", None)}</div>
-    </div>
+    <div class="h2h-column" style="max-height:none">{cards}</div>
     <p class="dim mt4" style="font-size:12px">{bi(
-      "共生成 " + num(len(pairs)) + " 组对阵页；两位球员之间没有已存交手时会显示说明，数据对比仍然可用。",
-      num(len(pairs)) + " pairing pages are generated. If two players have no stored meeting the page says so, and the statistical comparison still applies.")}</p>
+      "可对比范围为当前排名前 50 的球员，共生成 " + num(len(roster) * (len(roster) - 1) // 2) + " 组对阵页。",
+      "Comparisons cover the current top 50, generating " + num(len(roster) * (len(roster) - 1) // 2) + " pairing pages.")}</p>
   </div></div>
 </div>
 '''
     return shell(ctx, title="交手 · Head-to-head", active="h2h.html", body=body)
+
+
+def h2h_pick(ctx: Context, player: dict, opponents: list[dict]) -> str:
+    """Step two: choose this player's opponent from the generated range."""
+    rank_line = bi(f"世界第 {player['rank']}", f"World No.{player['rank']}")
+    cards = "".join(
+        f'<span class="h2h-pick-row">'
+        f'{avatar(ctx, o, 30)}'
+        f'<span class="sn"><b>{esc(o.get("zh") or o["name"])}</b>'
+        f'<span class="en">{esc(o["name"])}</span></span>'
+        f'<a class="seg" style="margin-left:auto" '
+        f'href="h2h-{min(player["id"], o["id"])}-{max(player["id"], o["id"])}.html">'
+        f'{bi("查看交手", "Compare")} →</a></span>'
+        for o in opponents
+    )
+    body = f'''
+<div class="wrap">
+  <div class="sec-hd" style="border-bottom:0">
+    <div><span class="eyebrow">{bi("Head-to-head · 交手对比", "")}</span>
+      <h2 style="font-size:clamp(22px,3.2vw,34px)">{ctx.name(player)}</h2>
+      <div class="row wrap mt3" style="gap:14px;font-size:13px;color:var(--ivory-dim)">
+        <span>{rank_line}</span>
+        <span>{esc(ctx.zh.get("countries", {}).get(player.get("country") or "", player.get("country") or ""))}</span>
+      </div>
+    </div>
+    <a class="link" href="h2h.html">{bi("换一位球员", "Pick another player")} →</a>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>{bi("选择对手", "Pick the opponent")}</h3>
+      <span class="panel-note">{bi("当前排名前 50 内均可对比", "anyone inside the current top 50")}</span></div>
+    <div class="card-bd flush"><div class="h2h-column" style="max-height:none">{cards}</div></div>
+  </div>
+</div>
+'''
+    title = f'{player.get("zh") or player["name"]} · 交手'
+    return shell(ctx, title=title, active="h2h.html", body=body)
 
 
 def _zh_of(ctx: Context, player: dict) -> str:
@@ -738,6 +762,33 @@ def _compare_block(ctx: Context, a: dict, b: dict) -> str:
 # ---------------------------------------------------------------------------
 
 
+def _rival_row(ctx: Context, pid: int, rival: dict) -> str:
+    """
+    One opponent row.
+
+    Pairing pages exist only inside the top N, so the row is a link when both
+    players are covered and plain text otherwise — no generated link may 404.
+    """
+    other = rival["player"]
+    rank_mark = (
+        f'<span class="num dim r-rank">No.{other["rank"]}</span>' if other.get("rank") else ""
+    )
+    record = (
+        f'<span class="r-rec {"lead" if rival["wins"] > rival["losses"] else "trail" if rival["wins"] < rival["losses"] else ""}">'
+        f'{rival["wins"]}–{rival["losses"]}</span>'
+    )
+    inner = (
+        f'{avatar(ctx, other, 34)}<span class="r-name">{ctx.name(other)}</span>'
+        f'<span class="flag">{esc(other.get("country") or "")}</span>'
+        f'{rank_mark}'
+        f'{record}'
+    )
+    if ctx.has_pair_page(pid, other["id"]):
+        return (f'<a class="rival" '
+                f'href="h2h-{min(pid, other["id"])}-{max(pid, other["id"])}.html">{inner}</a>')
+    return f'<span class="rival">{inner}</span>'
+
+
 def player_page(ctx: Context, player: dict, h2h_rows: list, recent: list) -> str:
     """A full player profile: biography, season record, serve splits, H2H vs top 30."""
     pid = player["id"]
@@ -757,16 +808,7 @@ def player_page(ctx: Context, player: dict, h2h_rows: list, recent: list) -> str
         for y in years
     )
 
-    rival_rows = "".join(
-        f'<a class="rival" href="h2h-{min(pid, r["id"])}-{max(pid, r["id"])}.html">'
-        f'{avatar(ctx, r["player"], 34)}'
-        f'<span class="r-name">{ctx.name(r["player"])}</span>'
-        f'<span class="flag">{esc(r["player"].get("country") or "")}</span>'
-        f'<span class="num dim r-rank">#{r["player"]["rank"]}</span>'
-        f'<span class="r-rec {"lead" if r["wins"] > r["losses"] else "trail" if r["wins"] < r["losses"] else ""}">'
-        f'{r["wins"]}–{r["losses"]}</span></a>'
-        for r in h2h_rows
-    )
+    rival_rows = "".join(_rival_row(ctx, pid, r) for r in h2h_rows)
 
     def _match_row(m):
         opponent = ctx.player(m["oid"])
@@ -956,3 +998,42 @@ def event_page(ctx: Context, event: dict) -> str:
 '''
     return shell(ctx, title=f'{event["name"]} {event["year"]} · 赛果', active="calendar.html",
                   body=body, description=f'{event["name"]} {event["year"]} 完整单打赛果。')
+
+
+def player_page_light(ctx: Context, player: dict, h2h_rows: list) -> str:
+    """
+    A compact profile for a player outside the ranking table.
+
+    Event draws and match logs reference thousands of opponents who are not in
+    the current top 300.  Rather than leave those links broken, they get a page
+    with what is known: identity, plus their record against anyone they have met.
+    """
+    rank_line = ""
+    if player.get("rank"):
+        rank_line = "<span>" + bi(f"世界第 {player['rank']}", f"World No.{player['rank']}") + "</span>"
+    body = f'''
+<div class="wrap">
+  <div class="sec-hd" style="border-bottom:0">
+    <div><span class="eyebrow">{esc(ctx.zh.get("countries", {}).get(player.get("country") or "", player.get("country") or ""))}
+      {f"· {bi('单打', 'Singles')}" if player.get("rank") else ""}</span>
+      <h2 style="font-size:clamp(24px,3.4vw,38px)">{ctx.name(player)}</h2>
+      <div class="row wrap mt3" style="gap:14px;font-size:13px;color:var(--ivory-dim)">
+        {rank_line}
+      </div>
+    </div>
+    <a class="link" href="players.html">{bi("返回球员名录", "Back to players")} →</a>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><h3>{bi("已知交手记录", "Recorded meetings")}</h3>
+      <span class="panel-note">{bi("已存比赛窗口（2023 年至今）", "stored window, 2023 onwards")}</span></div>
+    <div class="card-bd flush"><div class="rivals">
+      {"".join(_rival_row(ctx, player["id"], r) for r in h2h_rows[:60])
+       or '<div class="empty-state">' + bi("没有已存交手记录", "No recorded meetings") + "</div>"}
+    </div></div>
+  </div>
+  <p class="dim mt4" style="font-size:12px">{bi(
+    "这位球员不在当前单打排名前 300 之内，因此本站没有她的生涯档案与赛季统计。",
+    "This player is outside the current top 300, so no biography or season statistics are published for her here.")}</p>
+</div>
+'''
+    return shell(ctx, title=player.get("zh") or player["name"], active="players.html", body=body)

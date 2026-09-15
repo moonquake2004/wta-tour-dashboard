@@ -12,7 +12,7 @@
     "data": "python3 pyscripts/generate_data.py",
     "site": "python3 pyscripts/build_site.py",
     "serve": "python3 pyscripts/serve.py",
-    "verify": "python3 pyscripts/verify.py && python3 pyscripts/verify_dashboard.py",
+    "verify": "python3 pyscripts/verify.py && python3 pyscripts/verify_dashboard.py && python3 pyscripts/check_links.py",
     "publish": "python3 pyscripts/generate_data.py && python3 pyscripts/build_site.py && python3 pyscripts/verify_dashboard.py"
   }
 }

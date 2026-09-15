@@ -30,6 +30,7 @@ STEPS = [
     ("dashboard-data", "generate_data.py", False),
     ("dashboard-site", "build_site.py", False),
     ("verify-dashboard", "verify_dashboard.py", False),
+    ("check-links", "check_links.py", False),
 ]
 
 
