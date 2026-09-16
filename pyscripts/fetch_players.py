@@ -19,7 +19,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import time
 
+import time
+import urllib.request
+
 from wtalib import (
+    SSL_CONTEXT,
+    UA,
     env_int,
     fetch_player_detailed,
     fetch_player_ranking_history,
@@ -162,6 +167,27 @@ def ranking_history(player_id: int, attempts: int = 4) -> list:
     return []
 
 
+def _verified_photo(url, pid: int) -> str:
+    """
+    Return the headshot URL only if it actually resolves.
+
+    The API publishes an `imageurl` for every player, but a number of them — 142
+    of the current top 300, mostly recent debutants — point at blobs that answer
+    404.  Verifying once at fetch time keeps those out of the payload, so pages
+    show the monogram fallback instead of firing requests that are guaranteed to
+    fail.  The check is a HEAD request; 300 of them at a polite rate cost seconds.
+    """
+    if not url:
+        return ""
+    try:
+        req = urllib.request.Request(url, method="HEAD",
+                                     headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=15, context=SSL_CONTEXT) as resp:
+            return url if resp.status == 200 else ""
+    except Exception:  # noqa: BLE001 — any failure means no usable image
+        return ""
+
+
 def build_bio(player: dict, bio: dict) -> dict:
     return {
         "id": player["id"],
@@ -177,7 +203,7 @@ def build_bio(player: dict, bio: dict) -> dict:
         "backhand": bio.get("backhand") or "",
         "status": bio.get("status") or "",
         "proYear": bio.get("proyear"),
-        "photo": bio.get("imageurl") or "",
+        "photo": _verified_photo(bio.get("imageurl"), player["id"]),
         "careerPrize": bio.get("careerprize"),
         "ytdPrize": bio.get("ytdprize"),
         "sglRank": bio.get("sglrank"),

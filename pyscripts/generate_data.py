@@ -389,6 +389,7 @@ def main() -> int:
                 "breakPointsConvertedPct": stat.get("breakPointsConvertedPct"),
                 "totalPointsWonPct": stat.get("totalPointsWonPct"),
             },
+            "photo": (bio.get("photo") or "").strip(),
             "historyTail": [[r[0], r[1]] for r in tail],
         })
 

@@ -147,7 +147,7 @@ class Context:
         self.events = events
         self.h2h = h2h
         self.season = self.meta.get("season")
-        self.by_id = {p["id"]: p for p in self.players}
+        self.by_id = {str(p["id"]): p for p in self.players}
         self.h2h_players = h2h.get("players", {})
         self.h2h_pairs = h2h.get("pairs", {})
         self.counts = self.meta.get("counts", {})
@@ -243,7 +243,19 @@ class Context:
         return f'<span class="move down">▼ −{abs(v)}</span>'
 
     def photo(self, pid) -> str:
-        return f"https://wtafiles.blob.core.windows.net/images/headshots/{pid}.jpg"
+        """
+        Official headshot.
+
+        The official library only covers a subset of the ranking — 142 of the 300
+        have no headshot — so the address comes from the biography record rather
+        than being assembled from the id.  Returning an empty string for the rest
+        keeps the monogram fallback and avoids a request that is guaranteed to 404.
+        """
+        if isinstance(pid, dict):
+            pid = pid.get("id")
+        # The ranking payload carries each player's photo availability, so the
+        # address comes from there instead of being assembled from the id.
+        return (self.by_id.get(str(pid) if not isinstance(pid, str) else pid) or {}).get("photo") or ""
 
     def avatar(self, player, size: int = 34, cls: str = "") -> str:
         """
@@ -254,9 +266,13 @@ class Context:
         JavaScript is needed across the ~1,700 generated pages.
         """
         initials = "".join(w[:1] for w in str(player.get("name") or "?").split()[:2]).upper()
-        return (
-            f'<span class="av" style="--av:{size}px">'
-            f'<span class="av-mono" aria-hidden="true">{esc(initials)}</span>'
-            f'<img class="{esc(cls)}" src="{self.photo(player["id"])}" alt="" loading="lazy" '
-            f'width="{size}" height="{size}"></span>'
-        )
+        src = self.photo(player["id"])
+        img = ""
+        if src:
+            # Only emit the image when there is one: an empty src makes the browser
+            # request the page itself as an image, which shows up as a failed load.
+            img = (f'<img class="{esc(cls)}" src="{esc(src)}" alt="" loading="lazy" '
+                   f'width="{size}" height="{size}">')
+        return (f'<span class="av" style="--av:{size}px">'
+                f'<span class="av-mono" aria-hidden="true">{esc(initials)}</span>'
+                f'{img}</span>')
