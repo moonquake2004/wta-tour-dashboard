@@ -73,7 +73,8 @@ FAVICON = (
 
 
 def shell(ctx: Context, *, title: str, active: str, body: str,
-          description: str = "", jsonld: dict | None = None) -> str:
+          description: str = "", jsonld: dict | None = None,
+          enhance: bool = False) -> str:
     """
     Wrap a page body in the shared document.
 
@@ -81,6 +82,17 @@ def shell(ctx: Context, *, title: str, active: str, body: str,
     is what lets `:target` drive the bilingual switch with no script.
     """
     season = ctx.season
+    # The head-to-head composer rides on two native <select>s.  Picking both is
+    # enough to navigate — snooker-parity — but a bare <select> cannot change the
+    # URL by itself, so when the enhancement is on, this handler reads the pair
+    # and jumps to that pairing's page.  With scripting off the form never sends:
+    # the page's <noscript> block carries the plain-link fallback and the site
+    # stays fully usable.
+    enhancer = ""
+    if enhance:
+        enhancer = ("\n<script>function h2hGo(f){var a=f.pa.value,b=f.pb.value;"
+                    "if(!a||!b)return false;var s=[a,b].sort();"
+                    "location.href='h2h-'+s[0]+'-'+s[1]+'.html';return false}</script>\n")
     # Structured data is inert: the browser never executes application/ld+json,
     # so pages stay free of running code.
     ld_meta = ""
@@ -133,7 +145,7 @@ def shell(ctx: Context, *, title: str, active: str, body: str,
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
-</head>
+{enhancer}</head>
 <body>
 
 <!-- 语言锚点：正文是它们的兄弟节点，因此 :target 可以控制 .cn/.en 的显隐 -->

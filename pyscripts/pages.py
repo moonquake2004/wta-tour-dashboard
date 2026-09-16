@@ -372,15 +372,30 @@ def _calendar_row(ctx: Context, event: dict) -> str:
 H2H_DEPTH = 50
 
 
+def _pair_options(ctx: Context, roster: list[dict], selected=None,
+                  placeholder: str | None = None) -> str:
+    """`<option>` 列表：snooker 式的「中文名 · 英文名（#rank）」标签。"""
+    out: list[str] = []
+    if placeholder is not None:
+        out.append(f'<option value="" selected>{esc(placeholder)}</option>')
+    for p in roster:
+        zh_name = p.get("zh") or ""
+        label = (f"{esc(zh_name)} · {esc(p['name'])}" if zh_name and zh_name != p["name"]
+                 else esc(p["name"]))
+        rank = f"（#{p['rank']}）" if p.get("rank") else ""
+        sel = " selected" if selected is not None and str(p["id"]) == str(selected) else ""
+        out.append(f'<option value="{esc(p["id"])}"{sel}>{label}{rank}</option>')
+    return "".join(out)
+
+
 def h2h_hub(ctx: Context, roster: list[dict]) -> str:
     """
-    The comparison start page, laid out like the snooker dashboard: two labelled
-    select boxes — Player A on the left, Player B on the right — separated by
-    "VS".  Each box is a <details> whose menu items are plain links, so choosing
-    either side starts a comparison without any script.  Player B's menu opens on
-    the pick page, where Player A stays fixed.
+    The comparison start page, in the snooker dashboard's shape: two native
+    <select> controls — Player A and Player B — separated by "VS".  Picking both
+    navigates to that pairing's page via a small head-script; with scripting off
+    the <noscript> block carries the plain-link fallback and the two-step flow.
     """
-    menu = "".join(
+    noscript_rows = "".join(
         f'<a class="h2h-pick-row" href="h2h-pick-{p["id"]}.html">'
         f'{avatar(ctx, p, 30)}'
         f'<span class="sn"><b>{esc(p.get("zh") or p["name"])}</b>'
@@ -393,35 +408,42 @@ def h2h_hub(ctx: Context, roster: list[dict]) -> str:
     body = f'''
 <div class="wrap">
   {page_head("Head-to-head · 交手对比", "", "两位球员对比", "Compare two players",
-             "先在左侧选择球员 A，再在右侧选择球员 B，即可查看两人的完整交手记录与数据对比。",
-             "Pick player A on the left, then player B on the right, to see the full head-to-head record.")}
-  <div class="panel"><div class="card-bd">
-    <div class="h2h-composer">
+             "在两侧下拉里各选一位球员，选完即进入两人的完整交手记录与数据对比。",
+             "Pick player A and player B from the two selects; the record opens as soon as both are chosen.")}
+  <div class="panel h2h-overflow"><div class="card-bd">
+    <form class="h2h-composer" onsubmit="return h2hGo(this)">
       <div class="h2h-field">
         <span class="h2h-field-label">{bi("球员 A", "Player A")}</span>
-        <details class="h2h-select">
-          <summary><span class="ph">{bi("点击选择球员", "Pick player one")}</span>
-            <span class="caret" aria-hidden="true">▾</span></summary>
-          <div class="h2h-menu">{menu}</div>
-        </details>
+        <select class="h2h-native" name="pa" onchange="h2hGo(this.form)">
+          {_pair_options(ctx, roster, placeholder="选择球员 / Pick")}
+        </select>
       </div>
       <div class="h2h-vs" aria-hidden="true">VS</div>
       <div class="h2h-field">
         <span class="h2h-field-label">{bi("球员 B", "Player B")}</span>
-        <details class="h2h-select">
-          <summary><span class="ph">{bi("点击选择球员", "Pick player two")}</span>
-            <span class="caret" aria-hidden="true">▾</span></summary>
-          <div class="h2h-menu">{menu}</div>
-        </details>
+        <select class="h2h-native" name="pb" onchange="h2hGo(this.form)">
+          {_pair_options(ctx, roster, placeholder="选择球员 / Pick")}
+        </select>
       </div>
-    </div>
+    </form>
+    <noscript>
+      <div class="h2h-fallback-note">{bi(
+          "当前浏览器禁用了脚本，改用下列选择方式：",
+          "Scripting is off, so the link-list fallback is shown instead.")}</div>
+      <div class="h2h-columns">
+        <div><div class="h2h-col-head">{bi("球员一（前 50）", "Player one (top 50)")}</div>
+          <div class="h2h-column">{noscript_rows}</div></div>
+        <div><div class="h2h-col-head">{bi("球员二（前 50）", "Player two (top 50)")}</div>
+          <div class="h2h-column">{noscript_rows}</div></div>
+      </div>
+    </noscript>
     <p class="dim mt4" style="font-size:12px">{bi(
       f"可对比范围为当前排名前 {len(roster)} 的球员，共生成 {num(total)} 组对阵页。",
       f"Comparisons cover the current top {len(roster)}, generating {num(total)} pairing pages.")}</p>
   </div></div>
 </div>
 '''
-    return shell(ctx, title="交手 · Head-to-head", active="h2h.html", body=body)
+    return shell(ctx, title="交手 · Head-to-head", active="h2h.html", body=body, enhance=True)
 
 
 def h2h_pick(ctx: Context, player: dict, opponents: list[dict]) -> str:
@@ -458,7 +480,7 @@ def h2h_pick(ctx: Context, player: dict, opponents: list[dict]) -> str:
   {page_head("Head-to-head · 交手对比", "", "两位球员对比", "Compare two players",
              "左侧已选出球员 A；从右侧菜单选择球员 B，即可查看两人的完整交手记录与数据对比。",
              "Player A is picked; open the menu on the right to choose player B.")}
-  <div class="panel"><div class="card-bd">
+  <div class="panel h2h-overflow"><div class="card-bd">
     <div class="h2h-composer">
       <div class="h2h-field">
         <span class="h2h-field-label">{bi("球员 A", "Player A")}</span>

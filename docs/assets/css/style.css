@@ -1057,7 +1057,7 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
   background:var(--grass-600);color:#fff;font-family:var(--font-en);font-size:11px}
 
 /* ==========================================================================
-   赛程筛选（全部 / 进行中 / 已完成 / 未开始）
+   赛程筛选（全部 / 进行中 / 已完成）
    --------------------------------------------------------------------------
    每个筛选条件都是一份预渲染好的完整列表，用 :target 切换显示，因此不需要脚本。
    锚点放在 .cal-scope 内、与筛选栏同级，并用绝对定位钉在 scope 顶部，
@@ -1072,18 +1072,18 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 
 /* 选中某个筛选时：隐藏「全部」，显示对应视图 */
 #cal-anchor-ongoing:target ~ .panel .cal-views > #cal-all,
-#cal-anchor-past:target    ~ .panel .cal-views > #cal-all,
-#cal-anchor-upcoming:target ~ .panel .cal-views > #cal-all{display:none}
+#cal-anchor-current:target ~ .panel .cal-views > #cal-all,
+#cal-anchor-past:target    ~ .panel .cal-views > #cal-all{display:none}
 
 #cal-anchor-ongoing:target  ~ .panel .cal-views > #cal-ongoing,
-#cal-anchor-past:target     ~ .panel .cal-views > #cal-past,
-#cal-anchor-upcoming:target ~ .panel .cal-views > #cal-upcoming{display:block}
+#cal-anchor-current:target  ~ .panel .cal-views > #cal-current,
+#cal-anchor-past:target     ~ .panel .cal-views > #cal-past{display:block}
 
 /* 当前筛选的标签高亮 */
 #cal-anchor-all:target      ~ .sort-bar a[href="#cal-anchor-all"],
 #cal-anchor-ongoing:target  ~ .sort-bar a[href="#cal-anchor-ongoing"],
-#cal-anchor-past:target     ~ .sort-bar a[href="#cal-anchor-past"],
-#cal-anchor-upcoming:target ~ .sort-bar a[href="#cal-anchor-upcoming"]{
+#cal-anchor-current:target  ~ .sort-bar a[href="#cal-anchor-current"],
+#cal-anchor-past:target     ~ .sort-bar a[href="#cal-anchor-past"]{
   background:linear-gradient(180deg,var(--grass-600),var(--grass-700));
   border-color:var(--grass-500);color:#fff}
 
@@ -1093,8 +1093,8 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .chip:hover .chip-n{color:var(--ivory)}
 #cal-anchor-all:target      ~ .sort-bar a[href="#cal-anchor-all"] .chip-n,
 #cal-anchor-ongoing:target  ~ .sort-bar a[href="#cal-anchor-ongoing"] .chip-n,
-#cal-anchor-past:target     ~ .sort-bar a[href="#cal-anchor-past"] .chip-n,
-#cal-anchor-upcoming:target ~ .sort-bar a[href="#cal-anchor-upcoming"] .chip-n{
+#cal-anchor-current:target  ~ .sort-bar a[href="#cal-anchor-current"] .chip-n,
+#cal-anchor-past:target     ~ .sort-bar a[href="#cal-anchor-past"] .chip-n{
   background:rgba(255,255,255,.22);color:#fff}
 
 /* 月份分组标题 */
@@ -1122,6 +1122,9 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 /* 头像：行高归零，确保字母层永远不会溢出圆框 */
 .av{line-height:0}
 .av-mono{line-height:1}
+
+/* 表格与列表里的内联文字链接：命中区至少 24px */
+.p-name,.tl-name-link{display:inline-flex;align-items:center;min-height:24px}
 
 /* ==========================================================================
    基础类
@@ -1248,11 +1251,6 @@ main:has(.player-grid:target) .player-grid#all:not(:target){display:none}
   .sec-hd{gap:10px}
 }
 
-/* WTA 专有：冠军榜表格 */
-.title-board .c-titles{text-align:right}
-.p-name{font-family:var(--font-cn);min-width:0;overflow:hidden;text-overflow:ellipsis;
-  white-space:nowrap;display:inline-flex;align-items:center;min-height:24px}
-
 /* 文本型 KPI 值（如世界第一的球员名）：数值字号是为纯数字设计的，
    长中文名按 38px 会折成两行，故用较小的中文等宽版本。 */
 .kpi-value.text{font-family:var(--font-cn);font-size:21px;line-height:1.22;
@@ -1300,3 +1298,18 @@ main:has(.player-grid:target) .player-grid#all:not(:target){display:none}
   .h2h-vs{padding:0;font-size:22px}
   .h2h-menu{max-height:300px}
 }
+
+/* 交手下拉所在的面板：菜单要浮出面板边界。
+   .panel 的 overflow:hidden 会把它在三行处裁断，下拉容器放开这一限制。 */
+.panel.h2h-overflow{overflow:visible}
+
+/* 原生 select 的关闭态外观与替换框一致；展开的候选列表由操作系统绘制 */
+select.h2h-native{width:100%;min-height:52px;padding:9px 12px;border-radius:10px;
+  border:1px solid rgba(217,172,78,.5);color:var(--ivory-hi);
+  font-family:var(--font-cn);font-size:14.5px;font-weight:600;cursor:pointer;
+  background:linear-gradient(165deg,rgba(34,140,95,.5),rgba(15,72,50,.8))}
+select.h2h-native:hover,select.h2h-native:focus{border-color:var(--gold-400);
+  outline:none;box-shadow:0 0 0 3px rgba(217,172,78,.16)}
+select.h2h-native option{padding:8px}
+.h2h-fallback-note{font-family:var(--font-cn);font-size:12px;color:var(--ivory-mute);
+  margin:16px 0 8px}
