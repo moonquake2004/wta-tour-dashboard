@@ -192,9 +192,16 @@ class Context:
         return bi(self.zh.get("levels", {}).get(level, ""), level)
 
     def round_(self, code) -> str:
+        """Round label.
+
+        The match feed abbreviates the last three rounds as Q/S, while the draw
+        pages spell them QF/SF; both are shown the long way so a page reads
+        consistently wherever the round came from.
+        """
         c = str(code or "").upper()
+        label = {"Q": "QF", "S": "SF"}.get(c, c)
         zh = self.zh.get("rounds", {}).get(c, "")
-        return bi(zh, c) if zh else esc(c)
+        return bi(zh, label) if zh else esc(label)
 
     def surface(self, surface) -> str:
         key = str(surface or "").upper()

@@ -24,7 +24,9 @@ from wtalib import ROOT, env_int, log, read_json
 from zh_terms import has_cjk
 
 SEASON_FALLBACK = datetime.now(timezone.utc).year
-RESULT_LIMIT = env_int("WTA_RESULT_LIMIT", 1200)
+# The feed shows the season's most recent results; older matches stay reachable
+# through each player's profile and each event's draw.
+RESULT_LIMIT = env_int("WTA_RESULT_LIMIT", 600)
 MAX_PAIR_MEETINGS = env_int("WTA_H2H_MAX", 24)
 
 

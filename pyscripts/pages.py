@@ -1006,8 +1006,11 @@ def rankings(ctx: Context) -> str:
             f"<tbody>{body}</tbody></table>"
         )
 
+    # The default view is emitted LAST: the other views hide it with the sibling
+    # combinator, which only reaches elements that come after them.
     tables = []
-    for key, zh, en in RANK_SORTS:
+    for key, zh, en in ([x for x in RANK_SORTS if x[0] != "points"]
+                        + [x for x in RANK_SORTS if x[0] == "points"]):
         rows = sorted(ctx.players, key=lambda p: _rank_sort_key(p, key))
         tables.append(
             f'<div class="rank-body" id="sort-{key}"><div class="table-scroll">{table(rows)}</div></div>'
