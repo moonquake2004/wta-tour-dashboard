@@ -1252,3 +1252,8 @@ main:has(.player-grid:target) .player-grid#all:not(:target){display:none}
 .title-board .c-titles{text-align:right}
 .p-name{font-family:var(--font-cn);min-width:0;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap;display:inline-flex;align-items:center;min-height:24px}
+
+/* 文本型 KPI 值（如世界第一的球员名）：数值字号是为纯数字设计的，
+   长中文名按 38px 会折成两行，故用较小的中文等宽版本。 */
+.kpi-value.text{font-family:var(--font-cn);font-size:21px;line-height:1.22;
+  letter-spacing:-0.01em;text-shadow:0 2px 6px rgba(0,0,0,.3)}
