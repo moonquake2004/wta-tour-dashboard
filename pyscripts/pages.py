@@ -177,7 +177,14 @@ def overview(ctx: Context) -> str:
 </div>
 '''
     # The shell appends the site name, so the page title is just the view.
-    return shell(ctx, title=f"{ctx.season} 赛季总览", active="index.html", body=body)
+    return shell(ctx, title=f"{ctx.season} 赛季总览", active="index.html", body=body,
+                 jsonld={
+                     "@context": "https://schema.org",
+                     "@type": "WebSite",
+                     "name": "WTA Tour Data Dashboard",
+                     "inLanguage": "zh-CN",
+                     "url": "https://moonquake2004.github.io/wta-tour-dashboard/",
+                 })
 
 
 BOARD_ZH = {
@@ -690,8 +697,23 @@ def player_page(ctx: Context, player: dict, h2h_rows: list, recent: list) -> str
   </div>
 </div>
 '''
+    ld = {
+        "@context": "https://schema.org",
+        "@type": "Athlete",
+        "name": player["name"],
+        "alternateName": player.get("zh") or None,
+        "nationality": player.get("country") or None,
+        "birthDate": player.get("birth") or None,
+        "height": ({"@type": "QuantitativeValue", "value": player["height"], "unitCode": "CMT"}
+                   if player.get("height") else None),
+        "sport": "Tennis",
+        "jobTitle": "professional tennis player",
+        "url": f'https://moonquake2004.github.io/wta-tour-dashboard/player-{pid}.html',
+    }
+    ld = {k: v for k, v in ld.items() if v is not None}
     return shell(ctx, title=f'{player.get("zh") or player["name"]}', active="players.html",
-                  body=body, description=f'{player["name"]} — 生涯战绩、赛季发球统计与交手记录。')
+                  body=body, description=f'{player["name"]} — 生涯战绩、发球数据与交手记录。',
+                  jsonld=ld)
 
 
 def _win_pct(won, lost):
@@ -789,8 +811,21 @@ def event_page(ctx: Context, event: dict) -> str:
   </div></div>
 </div>
 '''
+    ld = {
+        "@context": "https://schema.org",
+        "@type": "SportsEvent",
+        "name": event["name"],
+        "sport": "Tennis",
+        "startDate": (event.get("start") or "") or None,
+        "endDate": (event.get("end") or "") or None,
+        "location": event.get("country") or None,
+        "url": ('https://moonquake2004.github.io/wta-tour-dashboard/'
+                f'event-{event["id"]}-{event["year"]}.html'),
+    }
+    ld = {k: v for k, v in ld.items() if v}
     return shell(ctx, title=f'{event["name"]} {event["year"]} · 赛果', active="calendar.html",
-                  body=body, description=f'{event["name"]} {event["year"]} 完整单打赛果。')
+                  body=body, description=f'{event["name"]} {event["year"]} 完整单打赛果。',
+                  jsonld=ld)
 
 
 def player_page_light(ctx: Context, player: dict, h2h_rows: list) -> str:
@@ -987,10 +1022,10 @@ def rankings(ctx: Context) -> str:
         for i, p in enumerate(top3)
     )
 
-    def table(rows: list[dict]) -> str:
+    def table(rows: list[dict], sort_key: str) -> str:
         body = "".join(
             f'<tr><td>{p["rank"]}</td>'
-            f'<td class="l">{player_cell(ctx, p)}</td>'
+            f'<td class="l">{player_cell(ctx, p, avatar_on=(sort_key == "points"))}</td>'
             f'<td class="c"><span class="tb-flag">{ctx.country(p["country"])}</span></td>'
             f'<td>{ctx.move(p["move"])}</td>'
             f'<td class="tb-num">{p.get("age") if p.get("age") is not None else "—"}</td>'
@@ -1014,7 +1049,7 @@ def rankings(ctx: Context) -> str:
                         + [x for x in RANK_SORTS if x[0] == "points"]):
         rows = sorted(ctx.players, key=lambda p: _rank_sort_key(p, key))
         tables.append(
-            f'<div class="rank-body" id="sort-{key}"><div class="table-scroll">{table(rows)}</div></div>'
+            f'<div class="rank-body" id="sort-{key}"><div class="table-scroll">{table(rows, key)}</div></div>'
         )
 
     body = f'''

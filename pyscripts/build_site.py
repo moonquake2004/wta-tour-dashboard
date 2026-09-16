@@ -95,6 +95,9 @@ def main() -> int:
     if not src_assets.exists():
         raise SystemExit(f"missing {src_assets}")
     shutil.copytree(src_assets, out / "assets")
+    # favicon.ico lives at the site root so that crawlers find it without reading
+    # the markup; the per-size PNGs stay in assets/ alongside the touch icon.
+    (out / "favicon.ico").write_bytes((src_assets / "favicon.ico").read_bytes())
 
     written = 0
 
@@ -185,17 +188,33 @@ def main() -> int:
     log("site", f"  ✓ 1 hub + {len(roster)} pickers + {len(pairs)} pairing pages")
 
     # ------------------------------------------------------------------- SEO
-    stamp = ctx.stamp.replace("-", "").replace(":", "").replace("T", "")
     (out / "robots.txt").write_text(
         "User-agent: *\nAllow: /\n"
         "Sitemap: https://moonquake2004.github.io/wta-tour-dashboard/sitemap.xml\n",
         encoding="utf-8",
     )
-    urls = ["index.html", "rankings.html", "players.html", "calendar.html",
-            "results.html", "stats.html", "h2h.html"]
+    # Full sitemap: the panels plus every player profile, event page and pairing
+    # page, all carrying unique content.  Compact pages for players outside the
+    # ranking table are left out on purpose — they are thin.
+    lastmod = (ctx.meta.get("generatedAt") or "")[:10]
+    base_url = "https://moonquake2004.github.io/wta-tour-dashboard/"
+    entries = {u: "weekly" for u in (
+        "index.html", "rankings.html", "players.html", "calendar.html",
+        "results.html", "stats.html", "h2h.html",
+    )}
+    for player in ctx.players:
+        entries[f'player-{player["id"]}.html'] = "weekly"
+    for event in events.values():
+        entries[f'event-{event["id"]}-{event["year"]}.html'] = "monthly"
+    for player in roster:
+        entries[f'h2h-pick-{player["id"]}.html'] = "weekly"
+    for a_id, b_id in pairs:
+        low, high = min(a_id, b_id), max(a_id, b_id)
+        entries[f'h2h-{low}-{high}.html'] = "monthly"
     sitemap = "\n".join(
-        f'  <url><loc>https://moonquake2004.github.io/wta-tour-dashboard/{u}</loc></url>'
-        for u in urls
+        f'  <url><loc>{base_url}{u}</loc><changefreq>{freq}</changefreq>'
+        f'<lastmod>{lastmod}</lastmod></url>'
+        for u, freq in entries.items()
     )
     (out / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -203,6 +222,7 @@ def main() -> int:
         f"{sitemap}\n</urlset>\n",
         encoding="utf-8",
     )
+    log("site", f"  ✓ sitemap: {len(entries)} URLs")
     # GitHub Pages serves from docs/, and Jekyll must not process it.
     (out / ".nojekyll").write_text("", encoding="utf-8")
     log("site", "  ✓ robots.txt · sitemap.xml · .nojekyll")
