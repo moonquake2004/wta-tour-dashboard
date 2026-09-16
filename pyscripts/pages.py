@@ -176,7 +176,8 @@ def overview(ctx: Context) -> str:
   </div>
 </div>
 '''
-    return shell(ctx, title="2026 女子网球巡回赛 · 数据看板", active="index.html", body=body)
+    # The shell appends the site name, so the page title is just the view.
+    return shell(ctx, title=f"{ctx.season} 赛季总览", active="index.html", body=body)
 
 
 BOARD_ZH = {

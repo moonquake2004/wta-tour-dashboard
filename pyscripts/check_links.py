@@ -25,6 +25,10 @@ DOCS = ROOT / "docs"
 HREF = re.compile(r'(?:href|src)="([^"]+)"')
 SKIP_SCHEMES = ("http://", "https://", "mailto:", "data:", "javascript:", "//")
 
+# Strings that belong to the companion dashboard and must never appear here.
+FORBIDDEN = ["ATP 男子网球", "ATP TOUR", "atptour.com", "atp-tour-dashboard",
+             "ATP Tour Data Dashboard", "ATP 年终"]
+
 
 def main() -> int:
     if not DOCS.exists():
@@ -89,6 +93,22 @@ def main() -> int:
     empties = [p.name for p in pages if len(p.read_text(encoding="utf-8")) < 2000]
     if empties:
         print(f"  ⚠ {len(empties)} 个页面异常小: {empties[:5]}")
+
+    # Brand guard: these templates are shared with the ATP dashboard, so a stray
+    # reference to the wrong tour would silently appear on every page at once.
+    for bad in FORBIDDEN:
+        hits = [p.name for p in pages if bad in p.read_text(encoding="utf-8")]
+        if hits:
+            print(f"  ✗ {len(hits)} 个页面含 «{bad}»: {hits[:3]}")
+            return 1
+    for asset in list((DOCS / "assets").rglob("*")):
+        if asset.is_file() and asset.suffix in (".css", ".js"):
+            text = asset.read_text(encoding="utf-8", errors="replace")
+            for bad in FORBIDDEN:
+                if bad in text:
+                    print(f"  ✗ 资源 {asset.name} 含 «{bad}»")
+                    return 1
+    print(f"  ✓ 品牌一致（未出现 {len(FORBIDDEN)} 个禁词）")
 
     print(f"\n✓ All {len(pages)} pages checked.")
     return 0
