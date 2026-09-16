@@ -21,7 +21,7 @@ pages are static documents, and the site works with **JavaScript switched off**.
 | Page | 中文 | Contents |
 | --- | --- | --- |
 | `index.html` | 总览 | Season KPIs, champion wall, latest results, top 10, stat and career leaders |
-| `calendar.html` | 赛程 | Every main-tour event with level, surface, draw, prize money, champion |
+| `calendar.html` | 赛程 | Every main-tour event, grouped by month, with level, surface, draw, prize money and champion — filterable by status (all / ongoing / completed / upcoming) |
 | `results.html` | 赛果 | The season's match results, newest first |
 | `rankings.html` | 排名 | Official singles ranking, podium, movement, pre-rendered sort orders |
 | `players.html` | 球员 | Every ranked player as a card, grouped by country |
@@ -32,8 +32,10 @@ pages are static documents, and the site works with **JavaScript switched off**.
 | `h2h-<a>-<b>.html` | 交手对比 | Career record, every meeting, side-by-side comparison |
 | `event-<id>-<year>.html` | 赛事赛果 | The complete singles draw, round by round, qualifying included |
 
-**Interaction without JavaScript.** Language switching, the pre-rendered sort
-orders and modal-style reveals are all driven by CSS `:target`. Three anchors sit
+**Interaction without JavaScript.** Language switching, the calendar's status
+filters, the pre-rendered sort orders and modal-style reveals are all driven by
+CSS `:target` — each filter is a complete pre-built list, so switching status
+never re-renders anything. Three anchors sit
 at the top of `<body>` and are siblings of the page content, so
 `#lang-cn:target ~ .lang-ctx .en { display: none }` swaps the language by URL
 fragment alone. Player headshot fallbacks are pure CSS layers, so a missing photo

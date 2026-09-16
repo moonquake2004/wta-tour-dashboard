@@ -204,29 +204,98 @@ def _career_col(zh, en, rows, fmt) -> str:
 # ---------------------------------------------------------------------------
 
 
+# Calendar filters, rendered as separate pre-built views and switched by :target.
+CAL_FILTERS = [
+    ("all", "全部", "All", lambda e: True),
+    ("ongoing", "进行中", "Ongoing", lambda e: e["status"] in ("live", "inProgress")),
+    ("past", "已完成", "Completed", lambda e: e["status"] == "past"),
+    ("upcoming", "未开始", "Upcoming", lambda e: e["status"] == "future"),
+]
+
+
 def calendar(ctx: Context) -> str:
-    seasons = sorted({e["year"] for e in ctx.calendar}, reverse=True)
-    sections = []
-    for year in seasons:
-        rows = [e for e in ctx.calendar if e["year"] == year]
-        rows.sort(key=lambda e: e["start"])
-        items = "".join(_calendar_row(ctx, e) for e in rows)
-        sections.append(
-            f'<section class="sec"><div class="sec-hd">'
-            f'<div><span class="eyebrow">{esc(year)}</span>'
-            f'<h2 style="font-size:19px">{bi(f"{len(rows)} 项赛事", f"{len(rows)} events")}</h2></div></div>'
-            f'<div class="panel"><div class="timeline">{items}</div></div></section>'
+    """
+    The tour calendar with status filters.
+
+    Each filter is a complete, pre-rendered list grouped by month; `:target` on
+    the filter anchors reveals one at a time, so no script is needed.  "All" is
+    first in the document and therefore visible by default.
+    """
+    counts = {key: sum(1 for e in ctx.calendar if match(e)) for key, _, _, match in CAL_FILTERS}
+    active_default = "all"
+
+    chips = "".join(
+        f'<a class="chip" href="#cal-anchor-{key}">{bi(zh, en)}'
+        f'<span class="chip-n">{counts[key]}</span></a>'
+        for key, zh, en, _ in CAL_FILTERS
+    )
+
+    views = []
+    for key, zh, en, match in CAL_FILTERS:
+        rows = [e for e in ctx.calendar if match(e)]
+        rows.sort(key=lambda e: (e["year"], e["start"]), reverse=True)
+        groups: dict[str, list[dict]] = {}
+        for event in rows:
+            groups.setdefault(event["start"][:7], []).append(event)
+        sections = "".join(
+            f'<div class="cal-month"><div class="cal-month-head">'
+            f'<span class="cn">{esc(month_label(month))}</span>'
+            f'<span class="en">{esc(month_label(month, english=True))}</span>'
+            f'<span class="cal-month-n">{bi(f"{len(items)} 项", f"{len(items)} events")}</span></div>'
+            + "".join(_calendar_row(ctx, e) for e in items)
+            + "</div>"
+            for month, items in groups.items()
         )
+        views.append(
+            f'<div class="cal-view" id="cal-{key}">{sections}'
+            + ("" if rows else '<div class="empty-state">' + bi("暂无赛事", "No events") + "</div>")
+            + "</div>"
+        )
+
+    # The filter anchors sit inside `.cal-scope` as siblings of the filter bar and
+    # the view list, so :target can both reveal a view and mark the active chip.
+    # They are absolutely positioned at the scope's top, which keeps a chip click
+    # from jumping the reader back to the top of the page.
+    anchors = "".join(
+        f'<div id="cal-anchor-{key}" class="cal-anchor"></div>' for key, _, _, _ in CAL_FILTERS
+    )
 
     body = f'''
 <div class="wrap">
   {page_head("Tour calendar · 巡回赛赛程", "", "WTA 赛季，逐站呈现", "The WTA season, event by event",
-             "每站赛事都可点开查看该站完整单打赛果（含资格赛）。",
-             "Every event links to its complete singles draw, qualifying included.")}
-  {"".join(sections)}
+             "可按状态筛选：全部 / 进行中 / 已完成 / 未开始。每站赛事都可点开查看完整单打赛果。",
+             "Filter by status — all, ongoing, completed or upcoming. Every event links to its complete singles draw.")}
+  <div class="cal-scope">
+    {anchors}
+    <div class="sort-bar">
+      <span class="sort-label">{bi("筛选", "Filter")}</span>
+      <div class="chips">{chips}</div>
+    </div>
+    <div class="panel"><div class="cal-views">{"".join(views)}</div></div>
+  </div>
 </div>
 '''
     return shell(ctx, title="赛程 · Tour Calendar", active="calendar.html", body=body)
+
+
+MONTH_ZH = {
+    "01": "1 月", "02": "2 月", "03": "3 月", "04": "4 月", "05": "5 月", "06": "6 月",
+    "07": "7 月", "08": "8 月", "09": "9 月", "10": "10 月", "11": "11 月", "12": "12 月",
+}
+MONTH_EN = {
+    "01": "January", "02": "February", "03": "March", "04": "April", "05": "May", "06": "June",
+    "07": "July", "08": "August", "09": "September", "10": "October", "11": "November", "12": "December",
+}
+
+
+def month_label(month: str, english: bool = False) -> str:
+    """`2026-03` → `2026 年 3 月` or `March 2026`."""
+    year, mon = month.split("-")
+    return f"{month_en(mon)} {year}" if english else f"{year} 年 {MONTH_ZH.get(mon, mon)}"
+
+
+def month_en(mon: str) -> str:
+    return MONTH_EN.get(mon, mon)
 
 
 def _calendar_row(ctx: Context, event: dict) -> str:
@@ -269,7 +338,10 @@ def _calendar_row(ctx: Context, event: dict) -> str:
     country = esc(ctx.zh.get("countries", {}).get(event.get("country") or "", event.get("country") or ""))
 
     return (
-        '<div class="tl-item' + (" past" if event["status"] == "past" else "") + '">'
+        '<div class="tl-item'
+        + (" past" if event["status"] == "past" else "")
+        + (" live" if event["status"] in ("live", "inProgress") else "")
+        + '">' 
         '<div class="tl-date">'
         f'<span class="tl-range">{esc(short_date(event["start"]))} – {esc(short_date(event["end"]))}</span>'
         f'<span class="tl-count">{esc(event["city"])}</span></div>'
@@ -300,7 +372,8 @@ def h2h_hub(ctx: Context, roster: list[dict]) -> str:
         f'{avatar(ctx, p, 30)}'
         f'<span class="sn"><b>{esc(p.get("zh") or p["name"])}</b>'
         f'<span class="en">{esc(p["name"])}</span></span>'
-        f'<span class="sr">#{p["rank"]} {esc(p["country"])}</span></a>'
+        f'<span class="sr">#{p["rank"]} {esc(p["country"])}</span>'
+        f'<span class="go" aria-hidden="true">→</span></a>'
         for p in roster
     )
     body = f'''
@@ -324,18 +397,28 @@ def h2h_hub(ctx: Context, roster: list[dict]) -> str:
 
 
 def h2h_pick(ctx: Context, player: dict, opponents: list[dict]) -> str:
-    """Step two: choose this player's opponent from the generated range."""
+    """
+    Step two: choose this player's opponent.
+
+    Each row holds exactly one link, so the whole row can be that link — which is
+    both the obvious affordance and what gives a long Chinese name room to sit on
+    a single line.
+    """
     rank_line = bi(f"世界第 {player['rank']}", f"World No.{player['rank']}")
-    cards = "".join(
-        f'<span class="h2h-pick-row">'
-        f'{avatar(ctx, o, 30)}'
-        f'<span class="sn"><b>{esc(o.get("zh") or o["name"])}</b>'
-        f'<span class="en">{esc(o["name"])}</span></span>'
-        f'<a class="seg" style="margin-left:auto" '
-        f'href="h2h-{min(player["id"], o["id"])}-{max(player["id"], o["id"])}.html">'
-        f'{bi("查看交手", "Compare")} →</a></span>'
-        for o in opponents
-    )
+
+    def row(opponent: dict) -> str:
+        low, high = min(player["id"], opponent["id"]), max(player["id"], opponent["id"])
+        code = f'#{opponent["rank"]} ' if opponent.get("rank") else ""
+        return (
+            f'<a class="h2h-pick-row" href="h2h-{low}-{high}.html">'
+            f'{avatar(ctx, opponent, 30)}'
+            f'<span class="sn"><b>{esc(opponent.get("zh") or opponent["name"])}</b>'
+            f'<span class="en">{esc(opponent["name"])}</span></span>'
+            f'<span class="sr">{esc(code + (opponent.get("country") or ""))}</span>'
+            f'<span class="go" aria-hidden="true">→</span></a>'
+        )
+
+    cards = "".join(row(o) for o in opponents)
     body = f'''
 <div class="wrap">
   <div class="sec-hd" style="border-bottom:0">
@@ -357,6 +440,7 @@ def h2h_pick(ctx: Context, player: dict, opponents: list[dict]) -> str:
 '''
     title = f'{player.get("zh") or player["name"]} · 交手'
     return shell(ctx, title=title, active="h2h.html", body=body)
+
 
 
 def _zh_of(ctx: Context, player: dict) -> str:

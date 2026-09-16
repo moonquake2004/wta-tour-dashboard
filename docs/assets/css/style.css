@@ -1055,3 +1055,70 @@ main{padding-top:var(--header-h);position:relative;z-index:1;min-height:60vh}
 .h2h-step{display:inline-flex;align-items:center;gap:8px}
 .h2h-step .n{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;
   background:var(--grass-600);color:#fff;font-family:var(--font-en);font-size:11px}
+
+/* ==========================================================================
+   赛程筛选（全部 / 进行中 / 已完成 / 未开始）
+   --------------------------------------------------------------------------
+   每个筛选条件都是一份预渲染好的完整列表，用 :target 切换显示，因此不需要脚本。
+   锚点放在 .cal-scope 内、与筛选栏同级，并用绝对定位钉在 scope 顶部，
+   这样点击筛选不会把读者弹回页面顶端。
+   ========================================================================== */
+.cal-scope{position:relative}
+.cal-anchor{position:absolute;top:0;left:0;width:0;height:0;overflow:hidden}
+
+/* 默认只显示「全部」 */
+.cal-view{display:none}
+.cal-views > #cal-all{display:block}
+
+/* 选中某个筛选时：隐藏「全部」，显示对应视图 */
+#cal-anchor-ongoing:target ~ .panel .cal-views > #cal-all,
+#cal-anchor-past:target    ~ .panel .cal-views > #cal-all,
+#cal-anchor-upcoming:target ~ .panel .cal-views > #cal-all{display:none}
+
+#cal-anchor-ongoing:target  ~ .panel .cal-views > #cal-ongoing,
+#cal-anchor-past:target     ~ .panel .cal-views > #cal-past,
+#cal-anchor-upcoming:target ~ .panel .cal-views > #cal-upcoming{display:block}
+
+/* 当前筛选的标签高亮 */
+#cal-anchor-all:target      ~ .sort-bar a[href="#cal-anchor-all"],
+#cal-anchor-ongoing:target  ~ .sort-bar a[href="#cal-anchor-ongoing"],
+#cal-anchor-past:target     ~ .sort-bar a[href="#cal-anchor-past"],
+#cal-anchor-upcoming:target ~ .sort-bar a[href="#cal-anchor-upcoming"]{
+  background:linear-gradient(180deg,var(--grass-600),var(--grass-700));
+  border-color:var(--grass-500);color:#fff}
+
+/* 标签上的数量徽标 */
+.chip-n{font-family:var(--font-en);font-size:10.5px;margin-left:6px;padding:1px 6px;
+  border-radius:100px;background:rgba(0,0,0,.34);color:var(--ivory-mute);font-weight:600}
+.chip:hover .chip-n{color:var(--ivory)}
+#cal-anchor-all:target      ~ .sort-bar a[href="#cal-anchor-all"] .chip-n,
+#cal-anchor-ongoing:target  ~ .sort-bar a[href="#cal-anchor-ongoing"] .chip-n,
+#cal-anchor-past:target     ~ .sort-bar a[href="#cal-anchor-past"] .chip-n,
+#cal-anchor-upcoming:target ~ .sort-bar a[href="#cal-anchor-upcoming"] .chip-n{
+  background:rgba(255,255,255,.22);color:#fff}
+
+/* 月份分组标题 */
+.cal-month-head{display:flex;align-items:baseline;gap:9px;padding:12px 18px 8px;
+  border-bottom:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.2);
+  position:sticky;top:0;backdrop-filter:blur(6px);z-index:2}
+.cal-month-head .cn{font-family:var(--font-cn);font-size:13.5px;font-weight:700;
+  color:var(--gold-400);letter-spacing:.02em}
+.cal-month-head .en{font-family:var(--font-en);font-size:10.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ivory-mute);margin:0}
+.cal-month-n{margin-left:auto;font-family:var(--font-cn);font-size:11.5px;color:var(--ivory-mute)}
+.cal-month:last-child .tl-item:last-child{border-bottom:none}
+
+/* 进行中的赛事给一点左侧强调 */
+.tl-item.live{border-left:3px solid var(--ball-400);padding-left:15px}
+
+/* 对手选择行：整行即链接，姓名列拿到全部剩余宽度 */
+.h2h-pick-row{grid-template-columns:auto minmax(0,1fr) auto auto;gap:10px}
+.h2h-pick-row .sn{min-width:0}
+.h2h-pick-row .sn b{min-width:0;max-width:100%;display:block}
+.h2h-pick-row .go{font-family:var(--font-en);font-size:13px;color:var(--ivory-mute);
+  transition:transform .14s,color .14s}
+.h2h-pick-row:hover .go{color:var(--gold-400);transform:translateX(3px)}
+
+/* 头像：行高归零，确保字母层永远不会溢出圆框 */
+.av{line-height:0}
+.av-mono{line-height:1}
