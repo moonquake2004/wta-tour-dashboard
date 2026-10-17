@@ -1085,7 +1085,7 @@ def rankings(ctx: Context) -> str:
     def table(rows: list[dict], sort_key: str) -> str:
         body = "".join(
             f'<tr><td>{p["rank"]}</td>'
-            f'<td class="l">{player_cell(ctx, p, avatar_on=(sort_key == "points"))}</td>'
+            f'<td class="l">{player_cell(ctx, p, country=False, avatar_on=(sort_key == "points"))}</td>'
             f'<td class="c"><span class="tb-flag">{ctx.country(p["country"])}</span></td>'
             f'<td>{ctx.move(p["move"])}</td>'
             f'<td class="tb-num">{p.get("age") if p.get("age") is not None else "—"}</td>'
