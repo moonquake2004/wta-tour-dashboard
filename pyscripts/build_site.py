@@ -16,7 +16,7 @@ import re
 import shutil
 from pathlib import Path
 
-from wtalib import DATA_DIR, ROOT, log
+from wtalib import DATA_DIR, ROOT, log, read_json
 from render import Context
 import pages
 
@@ -114,6 +114,38 @@ def main() -> int:
     write("players.html", pages.players_page(ctx))
     write("stats.html", pages.stats_page(ctx))
     log("site", f"  ✓ 6 panels")
+
+    # ------------------------------------------------- players named in results
+    # The results feed and the match logs name players who hold no ranking, no
+    # biography and no draw — qualifying entrants and lower-tier names.  Their
+    # rows link to a profile, so those pages have to exist before any page that
+    # references them is written.
+    ranked_ids = {p["id"] for p in ctx.players}
+    names: dict[int, dict] = {}
+    for owner, rows in (read_json("matches.json", {}) or {}).items():
+        for row in rows:
+            oid = row.get("oid")
+            if oid and row.get("o"):
+                names.setdefault(int(oid), {"name": row["o"],
+                                            "country": row.get("oc") or ""})
+    for entry in (data.get("results") or []):
+        for side in ("winner", "loser"):
+            person = entry.get(side) or {}
+            pid, name = person.get("id"), person.get("name")
+            if pid and name and not str(name).startswith("#"):
+                names.setdefault(int(pid), {"name": name,
+                                            "country": person.get("country") or ""})
+    results_only = 0
+    for pid, entry in names.items():
+        if pid in ranked_ids or str(pid) in ctx.h2h_players:
+            continue
+        if (out / f"player-{pid}.html").exists():
+            continue
+        ctx.h2h_players[str(pid)] = {
+            "id": pid, "name": entry["name"], "zh": "", "country": entry["country"],
+            "rank": None,
+        }
+    log("site", f"  ✓ {len(ctx.h2h_players)} named players registered for pages")
 
     # --------------------------------------------------------- player profiles
     rival_ids = [p["id"] for p in ctx.players[:30] if p["id"] in pair_ids]

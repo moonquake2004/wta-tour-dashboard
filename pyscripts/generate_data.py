@@ -63,6 +63,30 @@ def main() -> int:
     season = boards_in.get("season") or SEASON_FALLBACK
     rank_by_id = {p["id"]: p for p in rankings["players"]}
 
+    # The event feeds name every entrant, including qualifying and lower-tier
+    # players who appear in no ranking table, biography or head-to-head index.
+    # Without this the results feed rendered them as "#<id>".
+    # Opponents named inside the ranked players' own logs cover the remaining
+    # results: a lower-tier entrant who never entered a ranking table still shows
+    # up as somebody's opponent, with their name and country in that row.
+    log_names: dict = {}
+    for rows in matches.values():
+        for row in rows:
+            oid = row.get("oid")
+            if oid is not None and oid not in log_names and row.get("o"):
+                log_names[oid] = {"name": row["o"], "country": row.get("oc") or ""}
+
+    event_names: dict = {}
+    for draw in event_matches.values():
+        for rnd in draw.get("rounds") or []:
+            for match in rnd.get("matches") or []:
+                for side in ("a", "b"):
+                    person = match.get(side) or {}
+                    pid = person.get("id")
+                    if pid is not None and pid not in event_names:
+                        event_names[pid] = {"name": person.get("name") or "",
+                                            "country": person.get("country") or ""}
+
     def zh_name(pid) -> str:
         """
         Wikidata occasionally carries a "Chinese" label that is just the Latin
@@ -84,6 +108,11 @@ def main() -> int:
         entry = h2h_names.get(str(pid))
         if entry:
             return {"name": entry["n"], "zh": cz, "country": entry["c"], "rank": entry.get("r")}
+        for index in (event_names, log_names):
+            named = index.get(pid)
+            if named and named.get("name"):
+                return {"name": named["name"], "zh": cz,
+                        "country": named.get("country") or "", "rank": None}
         return {"name": f"#{pid}", "zh": cz, "country": "", "rank": None}
 
     # ------------------------------------------------- season W/L from matches
@@ -166,6 +195,44 @@ def main() -> int:
                 "rank1": (match.get("rank") if owner_is_p1 else match.get("orank")),
                 "rank2": (match.get("orank") if owner_is_p1 else match.get("rank")),
             })
+    # The per-player match feed lags the tour by a week or two, while the event
+    # draw feed is current — a tournament's own page carries its finished rounds
+    # as soon as they are played.  Folding the draws in keeps the results feed
+    # current instead of stopping at the last date the player feed knew about.
+    for draw in event_matches.values():
+        if draw.get("year") != season:
+            continue
+        for rnd in draw.get("rounds") or []:
+            for match in rnd.get("matches") or []:
+                state = (match.get("state") or "F").upper()
+                if state not in ("F", ""):
+                    continue                      # scheduled or in play
+                a = match.get("a") or {}
+                b = match.get("b") or {}
+                if not a.get("id") or not b.get("id") or not match.get("date"):
+                    continue
+                winner_id = a["id"] if match.get("winnerSide") == "A" else b["id"]
+                loser_id = b["id"] if winner_id == a["id"] else a["id"]
+                key = (f"{match['date']}|{draw['name']}|{rnd.get('label')}|"
+                       f"{min(a['id'], b['id'])}|{max(a['id'], b['id'])}")
+                if key in seen_match:
+                    continue
+                seen_match.add(key)
+                results.append({
+                    "date": match["date"],
+                    "event": draw["name"],
+                    "round": rnd.get("label"),
+                    "surface": draw.get("surface"),
+                    "level": draw.get("level"),
+                    "score": match.get("score"),
+                    "winnerId": winner_id,
+                    "loserId": loser_id,
+                    "player1": a["id"],
+                    "player2": b["id"],
+                    "rank1": None,
+                    "rank2": None,
+                })
+
     results.sort(key=lambda r: r["date"])
     results.reverse()
     recent = results[:RESULT_LIMIT]
