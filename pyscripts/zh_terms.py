@@ -198,6 +198,9 @@ COUNTRY_ZH = {
 # the transliteration conventions Chinese tennis media use for each source
 # language.
 PLAYER_ZH = {
+    "Hiromi Abe": "阿部宏美",
+    "Britt Du Pree": "布丽特·杜普雷",
+    "Joelle Steur": "乔埃尔·斯特尔",
     "Alexandra Shubladze": "亚历山德拉·舒布拉泽",
     "Alevtina Ibragimova": "阿列夫京娜·易卜拉欣莫娃",
     "Julia Avdeeva": "尤利娅·阿夫杰耶娃",

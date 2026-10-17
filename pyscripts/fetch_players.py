@@ -39,6 +39,10 @@ SEASON = env_int("WTA_SEASON", __import__("datetime").datetime.now().year)
 WORKERS = env_int("WTA_WORKERS", 4)
 
 ONLY = {int(x) for x in filter(None, __import__("os").environ.get("WTA_ONLY_IDS", "").split(","))}
+# Records are only fetched once by default, so a player's season W/L and title
+# counts freeze at whatever the snapshot held then.  The weekly job sets this to
+# re-read every ranked player.
+REFRESH = bool(int(__import__("os").environ.get("WTA_PLAYER_REFRESH", "0") or 0))
 
 # ---------------------------------------------------------------------------
 # Season statistics
@@ -243,7 +247,7 @@ def main() -> int:
     existing_bios = read_json("bios.json", {}) or {}
     existing_seasons = read_json("season-stats.json", {}) or {}
     existing_histories = read_json("ranking-history.json", {}) or {}
-    resume = bool(existing_bios) and not ONLY
+    resume = bool(existing_bios) and not ONLY and not REFRESH
 
     bios: dict = {int(k): v for k, v in existing_bios.items()} if resume else {}
     seasons: dict = {int(k): v for k, v in existing_seasons.items()} if resume else {}

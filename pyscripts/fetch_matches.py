@@ -16,6 +16,10 @@ from wtalib import env_int, fetch_player_matches, log, read_json, write_json
 LIMIT = env_int("WTA_MATCH_LIMIT", 300)
 FROM_YEAR = env_int("WTA_MATCH_FROM", 2023)
 PAGES = env_int("WTA_MATCH_PAGES", 10)
+# A stored log is only ever appended to for new players, so an existing player's
+# log never gains the matches played after it was first fetched.  The weekly job
+# sets this to re-read every log.
+REFRESH = bool(int(__import__("os").environ.get("WTA_MATCHES_REFRESH", "0") or 0))
 WORKERS = env_int("WTA_WORKERS", 4)
 
 # The feed returns a player's whole career, sorted ascending, 100 rows a page,
@@ -107,7 +111,7 @@ def main() -> int:
     # Resume: a network hiccup part-way through should not mean re-fetching every
     # player's log.  The stored file already holds the completed ones.
     existing = read_json("matches.json", {}) or {}
-    out: dict = {int(k): v for k, v in existing.items()}
+    out: dict = {} if REFRESH else {int(k): v for k, v in existing.items()}
     targets = [p for p in all_players if p["id"] not in out]
     if existing and targets:
         log("matches", f"Resuming — {len(out)} players already stored, {len(targets)} to fetch.")
